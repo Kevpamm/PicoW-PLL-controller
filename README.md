@@ -10,10 +10,10 @@ The Raspberry Pi Pico W will send signals to the PLL and control it, along with 
 
 ## OVERVIEW
 This project has 3 main components:
-**1. BLE Website (User Interface):** Users enter commands for the Pico W here. The commands can be a desired frequency that they want the PLL to lock, turning on Pico W LED, or rebooting the Pico W.
-**2. Raspberry Pi Pico W:** Host a BLE server for the BLE Website to connect. Pico W listens to the commands from the Website and directly send serial communication signals (bit banging) to the PLL and control the VCO.
-**3. EV-ADF4159EB3Z:** a PLL evaluation board that locks the frequency of an external VCO (Voltage Controlled Oscillator).
-**4. An external VCO:** The source of the carrier waves that needs its frequency lock.
+1. **BLE Website (User Interface):** Users enter commands for the Pico W here. The commands can be a desired frequency that they want the PLL to lock, turning on Pico W LED, or rebooting the Pico W.
+2. **Raspberry Pi Pico W:** Host a BLE server for the BLE Website to connect. Pico W listens to the commands from the Website and directly send serial communication signals (bit banging) to the PLL and control the VCO.
+3. **EV-ADF4159EB3Z:** a PLL evaluation board that locks the frequency of an external VCO (Voltage Controlled Oscillator).
+4. **An external VCO:** The source of the carrier waves that needs its frequency lock.
 
 ## INSTRUCTIONS TO RUN THE PROGRAM
 ### I. Hardware Requirements:
