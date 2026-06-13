@@ -23,10 +23,10 @@ This project has 3 main components:
 3. **EV-ADF4159EB3Z:** a PLL evaluation board that locks the frequency of an external VCO (Voltage Controlled Oscillator).
 ![EV-ADF4159EB3Z](images/EV3Z.jpg)
 <p align="center">
-  <b>Figure 2:</b> The EV-ADF4159EB3Z evaluation board that contains the PLL ADF4159 chip.
+  <b>Figure 2:</b> The EV-ADF4159EB3Z evaluation board that contains the PLL ADF4159 chip and reference oscillator.
 </p>
 
-4. **An external VCO:** The source of the carrier waves that needs its frequency lock.
+4. **An external VCO:** The source of the carrier waves that needs its frequency locked.
 
 ## III. INSTRUCTIONS TO RUN THE PROGRAM
 ### 1. Hardware Requirements:

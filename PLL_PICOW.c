@@ -15,12 +15,12 @@
 
 // This defines how INT and FRAC of the N divider are calculated
 #define CONRAD_PLL_MATH // Conrad ADF1549 configuration
-// #define KEVIN_PLL_MATH // Kevin ADF1549 configuration. Arguably more optimized
+//#define KEVIN_PLL_MATH // Kevin ADF1549 configuration. Arguably more optimized
 
-
-#define DATA_PIN 19 
-#define CLOCK_PIN 18
-#define LATCH_PIN 17
+// Blue is ground  
+#define DATA_PIN 19 //green
+#define CLOCK_PIN 18 //yellow
+#define LATCH_PIN 17 //red
 #define BORN_PIN1 10
 #define BORN_PIN2 11
 #define BORN_PIN3 12
@@ -47,6 +47,8 @@ bool FIRST_CONNECTION = true;
 
 
 volatile uint32_t pending_frequency = 0;
+
+#if defined CONRAD_PLL_MATH
 uint32_t ToSendFrequency = 900; // in hz 900000000
 uint32_t intVal = 36; //set to 900MHz initially
 uint32_t fracVal = 0;
@@ -70,6 +72,33 @@ uint32_t R52 = 0x800005;
 uint32_t R61 = 0x6;
 uint32_t R62 = 0x800006;
 uint32_t R7 = 0x7;
+
+#elif defined KEVIN_PLL_MATH
+uint32_t ToSendFrequency = 920; // in hz 900000000
+uint32_t intVal = 23; //set to 900MHz initially
+uint32_t fracVal = 0;
+
+uint32_t muxVal = 0b0110;
+uint32_t rampOn = 0;
+
+uint32_t phaseAdj = 0;
+uint32_t phaseVal = 0;
+// r3
+uint32_t negBld = 0b110;
+
+uint32_t R0 = 0x280B8000;
+uint32_t R1 = 0x1;
+uint32_t R2 = 0x721800A;
+uint32_t R3 = 0x1830083;
+uint32_t R41 = 0x180104;
+uint32_t R42 = 0x180144;
+uint32_t R51 = 0x5;
+uint32_t R52 = 0x800005;
+uint32_t R61 = 0x6;
+uint32_t R62 = 0x800006;
+uint32_t R7 = 0x7;
+
+#endif
 
 bool freqHopFlag = false;
 bool wasHopping = false; // cleanup flag
@@ -461,10 +490,10 @@ static void pico_set_led(bool led_on) {
 void calculateIntFrac(void){
     #if defined(CONRAD_PLL_MATH)
         intVal = ToSendFrequency / 25;
-        fracVal = (uint32_t)(round( (double)(ToSendFrequency - (intVal * 25)) * 1.34217727) );
+        fracVal = (uint32_t)(round( (double)(ToSendFrequency - (intVal * 25)) * 1000000 * 1.34217727) );
     #elif defined(KEVIN_PLL_MATH)
-        intval = ToSendFrequency / 40;
-        fracVal = (uint32_t) (round( (double)(ToSendFrequency - (intVal * 40)) * 0.8388608));
+        intVal = ToSendFrequency / 40;
+        fracVal = (uint32_t) (round( (double)(ToSendFrequency - (intVal * 40)) * 1000000 * 0.8388608));
     #endif
 }
 
