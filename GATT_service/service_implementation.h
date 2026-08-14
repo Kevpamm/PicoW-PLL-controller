@@ -16,7 +16,15 @@ static inline uint32_t parseFrequency(uint8_t * buffer, uint16_t buffer_size);
 static inline void notify_register_characteristic(void);
 
 extern volatile bool frequency_receipt_status;
+extern volatile bool hop_delay_time_receipt_status;
+extern volatile bool hop_step_frequency_receipt_status;
+extern volatile bool span_frequency_receipt_status;
+extern volatile uint32_t ToSendFrequency;
 extern volatile uint32_t pending_frequency;
+extern volatile uint32_t delayTime_inMicro;
+extern volatile uint32_t stepFrequency;
+extern volatile uint32_t spanFrequency;
+extern volatile uint32_t endHopFrequency;
 
 extern volatile bool send_all_registers_flag;
 extern volatile bool send_freq_registers_flag;
@@ -254,16 +262,55 @@ static int PLL_service_write_callback(hci_con_handle_t con_handle, uint16_t attr
     else if (attribute_handle == service_object.characteristic_hop_handle) {
         PLL_service_t *instance = &service_object;
         if (buffer_size == 5) {
-            memcpy(instance->characteristic_hop_value, buffer, 5);
-            instance->characteristic_hop_value_length = buffer_size;
-            hop_frequency_flag = true;
+            switch (*buffer) {
+                case 0x00:
+                    uint32_t delayTime_inMillisec = *(buffer + 1) | *(buffer + 2) << 8 | *(buffer + 3) << 16 | *(buffer + 4) << 24;
+                    memcpy(instance->characteristic_hop_value, buffer + 1, 4);
+                    delayTime_inMicro = delayTime_inMillisec * 1000;
+                    hop_delay_time_receipt_status = true;
+                    break;
 
-            //Notify the new Hop Frequency back to the client.
-            if (instance->characteristic_frequency_client_configuration) {
+                case 0x01:
+                    uint32_t stepFrequency_inHz = *(buffer + 1) | *(buffer + 2) << 8 | *(buffer + 3) << 16 | *(buffer + 4) << 24;
+                    memcpy(instance->characteristic_hop_value + 4, buffer + 1, 4);
+                    stepFrequency = stepFrequency_inHz / 1000000;
+                    hop_step_frequency_receipt_status = true;
+                    break;
+
+                case 0x02:
+                    uint32_t spanFrequency_inHz = *(buffer + 1) | *(buffer + 2) << 8 | *(buffer + 3) << 16 | *(buffer + 4) << 24;
+                    memcpy(instance->characteristic_hop_value + 8, buffer + 1, 4);
+                    spanFrequency = spanFrequency_inHz / 1000000;
+                    endHopFrequency = spanFrequency + ToSendFrequency;
+                    span_frequency_receipt_status = true;
+                    break;
+
+                case 0x03:
+                    if (!hop_frequency_flag) {
+                        hop_frequency_flag = true;
+                    }
+                    goto END;
+
+                case 0x04:
+                    if (hop_frequency_flag) {
+                        hop_frequency_flag = false;
+                    }
+                    goto END;
+                
+                default:
+
+                    goto END;
+            }
+
+
+            if (instance->characteristic_hop_client_configuration) {
                 instance->callback_Hop.callback = &characteristic_hop_callback;
                 instance->callback_Hop.context = (void*) instance;
                 att_server_register_can_send_now_callback(&instance->callback_Hop, instance->con_handle);
             }
+            END: return 0;
+        }
+        else { //Error buffer size != 5
             return 0;
         }
     }
@@ -308,7 +355,7 @@ void PLL_service_server_init(uint8_t * frequency_ptr, uint8_t * control_ptr, uin
     instance->characteristic_control_length = 1;
 
     instance->characteristic_hop_value = hop_ptr;
-    instance->characteristic_hop_value_length = 5;
+    instance->characteristic_hop_value_length = 12;
 
     instance->characteristic_register_value = register_ptr;
     instance->characteristic_register_value_length = 52;

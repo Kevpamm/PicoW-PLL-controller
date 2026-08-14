@@ -17,39 +17,9 @@
 #define CONRAD_PLL_MATH // Conrad ADF1549 configuration
 //#define KEVIN_PLL_MATH // Kevin ADF1549 configuration. Arguably more optimized
 
-// Blue is ground  
-#define DATA_PIN 19 //green
-#define CLOCK_PIN 18 //yellow
-#define LATCH_PIN 17 //red
-#define BORN_PIN1 10
-#define BORN_PIN2 11
-#define BORN_PIN3 12
-
-
-// ADVERTISEMENT FLAGS
-#define APP_AD_FLAGS 0x06 // This flag is for General Discoverable in advertising data, meaning everyone can discover our device and advertising_data
-#define BUFFER_SIZE 100
-#define BANDS 8
-// CONNECTED BLE FLASG
-volatile bool TESTING_FLAG = false;
-
-volatile bool frequency_receipt_status = false;
-volatile bool BLE_IS_CONNECTED = false;
-volatile bool control_receipt_status = false;
-volatile bool send_all_registers_flag = false;
-volatile bool send_freq_registers_flag = false;
-volatile bool restore_default_registers_flag = false;
-volatile bool register_notification_first_on = false;
-volatile bool hop_frequency_flag = false;
-volatile bool led_flag = false;
-
-bool FIRST_CONNECTION = true;
-
-
-volatile uint32_t pending_frequency = 0;
-
 #if defined CONRAD_PLL_MATH
-uint32_t ToSendFrequency = 900; // in hz 900000000
+volatile uint32_t ToSendFrequency = 900; // in hz 900000000
+
 uint32_t intVal = 36; //set to 900MHz initially
 uint32_t fracVal = 0;
 
@@ -100,14 +70,55 @@ uint32_t R7 = 0x7;
 
 #endif
 
+// Blue is ground  
+#define DATA_PIN 19 //red
+#define CLOCK_PIN 18 //orange
+#define LATCH_PIN 17 //yello
+#define BORN_PIN1 10
+#define BORN_PIN2 11
+#define BORN_PIN3 12
+
+
+// ADVERTISEMENT FLAGS
+#define APP_AD_FLAGS 0x06 // This flag is for General Discoverable in advertising data, meaning everyone can discover our device and advertising_data
+#define BUFFER_SIZE 100
+#define BANDS 8
+// CONNECTED BLE FLASG
+volatile bool TESTING_FLAG = false;
+
+volatile bool frequency_receipt_status = false;
+volatile bool BLE_IS_CONNECTED = false;
+volatile bool control_receipt_status = false;
+volatile bool send_all_registers_flag = false;
+volatile bool send_freq_registers_flag = false;
+volatile bool restore_default_registers_flag = false;
+volatile bool register_notification_first_on = false;
+volatile bool hop_frequency_flag = false;
+volatile bool led_flag = false;
+
+bool FIRST_CONNECTION = true;
+
+
+volatile uint32_t pending_frequency = 0;
+
+
+
 bool freqHopFlag = false;
 bool wasHopping = false; // cleanup flag
 uint32_t fhDelay = 1000000; // in us (microseconds)
 uint32_t fhStep = 50 * 1000000; // in hz
 uint32_t fhSpan = 300 * 1000000; // in hz
 uint32_t fhStart = 90000000; // default updated each freq send
-unsigned long lastHop = 0;
-unsigned long currentMicros = 0;
+
+volatile bool hop_delay_time_receipt_status = false;
+volatile bool hop_step_frequency_receipt_status = false;
+volatile bool span_frequency_receipt_status = false;
+volatile uint32_t delayTime_inMicro = 0;
+volatile uint32_t stepFrequency = 0;
+volatile uint32_t spanFrequency = 0;
+
+uint64_t lastHop = 0;
+
 
 // NEW SUPPORTED FREQUENCY BANDS
 const uint32_t frequencyBands[BANDS][2] = {{920, 949}, {970, 996}, {1074, 1106}, {1209, 1266}, {1270, 1323}, {1442, 1514}, {1695, 1811}, {2142, 2401}};
@@ -349,7 +360,7 @@ int main() {
     storeRegisterValue(characteristic_REGISTER_tx, AllRegisterValues, 13);
 
     while(1) {
-      
+        
         if (BLE_IS_CONNECTED && FIRST_CONNECTION) {
             
             printf("\nDefault Frequency Buffer: ");
@@ -423,8 +434,32 @@ int main() {
                 printf("\n\t>> Pico-W received an unsupported frequency band from the User Interface.");
                 printf("\n\t>> Frequency and Register is restored to default.\n");
                 restoreAllValues();
+                frequency_receipt_status = false;
             }
 
+        }
+        if (hop_frequency_flag && !frequency_receipt_status) {
+            uint64_t currentMicros = to_us_since_boot(get_absolute_time());
+            if (currentMicros - lastHop >= delayTime_inMicro && ToSendFrequency < endHopFrequency) {
+                ToSendFrequency += stepFrequency;
+                lastHop = currentMicros;
+                for (int i = 0; i < BANDS; i++) { 
+                    if (ToSendFrequency >= (frequencyBands[i][0]) && ToSendFrequency <= (frequencyBands[i][1])) {
+                        calculateIntFrac();
+                        updateR0();
+                        updateR1();
+                        updateR3();
+                        changeBorn(i);
+                        sendPLLFreqRegisters();
+                        uint32_t AllRegisterValues[6] = {intVal, fracVal, R0, R1, R2, R3};
+                        storeRegisterValue(characteristic_REGISTER_tx, AllRegisterValues, 6);
+                    }
+                }
+
+            }
+            if (ToSendFrequency >= endHopFrequency) {
+                hop_frequency_flag = false;
+            }
         }
 
         if (send_all_registers_flag == true) {
