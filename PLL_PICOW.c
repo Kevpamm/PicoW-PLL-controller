@@ -93,9 +93,11 @@ volatile bool send_all_registers_flag = false;
 volatile bool send_freq_registers_flag = false;
 volatile bool restore_default_registers_flag = false;
 volatile bool register_notification_first_on = false;
-volatile bool hop_frequency_flag = false;
+volatile bool hop_command_flag = false;
 volatile bool led_flag = false;
-
+bool POWER_STATUS = true;
+bool is_hopping = false;
+bool hop = false;
 bool FIRST_CONNECTION = true;
 
 volatile uint32_t pending_frequency = 0;
@@ -287,11 +289,12 @@ static uint8_t characteristic_LED_tx[BUFFER_SIZE];
 
 bool freqHop_timer_callback(struct repeating_timer *t)
 {
-    if (!hop_frequency_flag || ToSendFrequency >= stopFrequency)
+    if (!hop_command_flag || ToSendFrequency >= stopFrequency)
     {
         return false; // Stop the timer
     }
-    frequencyHopOnce();
+
+    hop = true;
     return true; // continue the timer
 }
 
@@ -365,6 +368,7 @@ int main()
     storeRegisterValue(characteristic_REGISTER_tx, AllRegisterValues, 13);
 
     struct repeating_timer timer;
+    
 
     while (1)
     {
@@ -443,9 +447,9 @@ int main()
                         printf("%X ", characteristic_REGISTER_tx[i]);
                     }
                     frequency_receipt_status = false;
-                    if (hop_frequency_flag)
+                    if (hop_command_flag)
                     {
-                        hop_frequency_flag = false;
+                        hop_command_flag = false;
                     }
                     break; // exit loop
                 }
@@ -458,7 +462,7 @@ int main()
                 frequency_receipt_status = false;
             }
         }
-        // if (hop_frequency_flag && !frequency_receipt_status)
+        // if (hop_command_flag && !frequency_receipt_status)
         // {
         //     uint64_t currentMicros = to_us_since_boot(get_absolute_time());
         //     if (currentMicros - lastHop >= delayTime_inMicro && ToSendFrequency < endHopFrequency)
@@ -482,18 +486,32 @@ int main()
         //     }
         //     if (ToSendFrequency >= endHopFrequency)
         //     {
-        //         hop_frequency_flag = false;
+        //         hop_command_flag = false;
         //     }
         // }
         if (hop_step_frequency_receipt_status == true)
         {
-            printf("Step Frequency received: %u", stepFrequency);
+            printf("Step Frequency received: %u\n", stepFrequency);
             hop_step_frequency_receipt_status = false;
         }
+        if (hop_delay_time_receipt_status) {
+            printf("Delay time receive: %u\n", delayTime_inMillisec);
+            hop_delay_time_receipt_status = false;
+        }
+        if (span_frequency_receipt_status) {
+            printf("Span receive: %u\n", spanFrequency);
+            span_frequency_receipt_status = false;
+        }
 
-        if (hop_frequency_flag == true)
+        if (hop_command_flag && !is_hopping)
         {
+            printf("Add timer\n");
             add_repeating_timer_ms(delayTime_inMillisec, freqHop_timer_callback, NULL, &timer);
+            is_hopping = true;
+        }
+        if (hop == true) {
+            hop = false;
+            frequencyHopOnce();
         }
 
         if (send_all_registers_flag == true)
@@ -511,15 +529,19 @@ int main()
             restoreAllValues();
             restore_default_registers_flag = false;
         }
-        if (power_down_pll_flag == true)
+        // This logic is false
+        if (power_down_pll_flag == true && POWER_STATUS)
         {
             updateR3(&power_down_pll_flag);
             sendPLLFreqRegisters();
+            POWER_STATUS = false;
         }
-        else
+        else if (!power_down_pll_flag && !POWER_STATUS)
         {
             updateR3(&power_down_pll_flag);
             sendPLLFreqRegisters();
+            POWER_STATUS = true;
+            printf("lo ");
         }
 
         pico_set_led(led_flag);

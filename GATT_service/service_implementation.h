@@ -32,7 +32,7 @@ extern volatile bool send_all_registers_flag;
 extern volatile bool send_freq_registers_flag;
 extern volatile bool restore_default_registers_flag;
 extern volatile bool register_notification_first_on;
-extern volatile bool hop_frequency_flag;
+extern volatile bool hop_command_flag;
 extern volatile bool led_flag;
 
 extern const uint32_t defaultFrequency;
@@ -45,8 +45,12 @@ enum ControlValue
     RESTORE_DEFAULT__CONTROL_ENUM,
     RESET_PICO__CONTROL_ENUM,
     BLE_DATA_ON__CONTROL_ENUM,
-    FAST_PIN__CONTROL_ENUM
+    BLE_DATA_OFF__CONTROL_ENUM,
+    FAST_PIN_ON__CONTROL_ENUM,
+    FAST_PIN_OFF__CONTROL_ENUM,
+    POWER_ON_PLL
 };
+
 // This struct manages our service
 typedef struct
 {
@@ -252,7 +256,7 @@ static int PLL_service_write_callback(hci_con_handle_t con_handle, uint16_t attr
 
             if (ControlCommandReceived == POWER_DOWN_PLL)
             {
-                power_down_pll_flag = !power_down_pll_flag;
+                power_down_pll_flag = true;
             }
             else if (ControlCommandReceived == SEND_ALL_REGISTERS__CONTROL)
             {
@@ -272,13 +276,17 @@ static int PLL_service_write_callback(hci_con_handle_t con_handle, uint16_t attr
             {
                 reset_usb_boot(0, 0);
             }
-            else if (BLE_DATA_ON__CONTROL_ENUM)
+            else if (ControlCommandReceived == BLE_DATA_ON__CONTROL_ENUM)
             {
                 printf("Pico-W feature \"BLE_data_on\" has not been added!\n");
             }
-            else if (FAST_PIN__CONTROL_ENUM)
+            else if (ControlCommandReceived == FAST_PIN_OFF__CONTROL_ENUM || FAST_PIN_ON__CONTROL_ENUM)
             {
                 printf("Pico-W only sends data in Fast-pin mode. This feature cannot be turned off.\n");
+            }
+            else if (ControlCommandReceived == POWER_ON_PLL)
+            {
+                power_down_pll_flag = false;
             }
             return 0;
         }
@@ -301,8 +309,9 @@ static int PLL_service_write_callback(hci_con_handle_t con_handle, uint16_t attr
             switch (*buffer)
             {
             case 0x00:
-                delayTime_inMillisec = *(buffer + 1) | *(buffer + 2) << 8 | *(buffer + 3) << 16 | *(buffer + 4) << 24;
+                uint32_t delayTime_inMicrosec = *(buffer + 1) | *(buffer + 2) << 8 | *(buffer + 3) << 16 | *(buffer + 4) << 24;
                 memcpy(instance->characteristic_hop_value, buffer + 1, 4);
+                delayTime_inMillisec = delayTime_inMicrosec / 1000;
                 hop_delay_time_receipt_status = true;
                 break;
 
@@ -322,22 +331,17 @@ static int PLL_service_write_callback(hci_con_handle_t con_handle, uint16_t attr
                 break;
 
             case 0x03:
-                if (!hop_frequency_flag)
-                {
-                    hop_frequency_flag = true;
-                }
-                goto END;
+                hop_command_flag = true;
+                printf("hop flag on");
+                return 0;
 
             case 0x04:
-                if (hop_frequency_flag)
-                {
-                    hop_frequency_flag = false;
-                }
-                goto END;
+                hop_command_flag = false;
+                printf("hop flag off");
+                return 0;
 
             default:
-
-                goto END;
+                return 0;
             }
 
             if (instance->characteristic_hop_client_configuration)
@@ -346,8 +350,6 @@ static int PLL_service_write_callback(hci_con_handle_t con_handle, uint16_t attr
                 instance->callback_Hop.context = (void *)instance;
                 att_server_register_can_send_now_callback(&instance->callback_Hop, instance->con_handle);
             }
-        END:
-            return 0;
         }
         else
         { // Error buffer size != 5
@@ -431,8 +433,8 @@ void PLL_service_server_init(uint8_t *frequency_ptr, uint8_t *control_ptr, uint8
     instance->characteristic_LED_handle = ATT_CHARACTERISTIC_50e12010_a21d_4471_b2f0_412147c8399e_01_VALUE_HANDLE;
     instance->characteristic_LED_user_description_handle = ATT_CHARACTERISTIC_50e12010_a21d_4471_b2f0_412147c8399e_01_USER_DESCRIPTION_HANDLE;
 
-    //#define ATT_SERVICE_50e12000_a21d_4471_b2f0_412147c8399e_START_HANDLE 0x0007
-    // #define ATT_SERVICE_50e12000_a21d_4471_b2f0_412147c8399e_END_HANDLE 0x0019
+    // #define ATT_SERVICE_50e12000_a21d_4471_b2f0_412147c8399e_START_HANDLE 0x0007
+    //  #define ATT_SERVICE_50e12000_a21d_4471_b2f0_412147c8399e_END_HANDLE 0x0019
     service_handler.start_handle = ATT_SERVICE_50e12000_a21d_4471_b2f0_412147c8399e_START_HANDLE;
     service_handler.end_handle = ATT_SERVICE_50e12000_a21d_4471_b2f0_412147c8399e_END_HANDLE;
 
