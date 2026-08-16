@@ -17,7 +17,7 @@
 // #define KEVIN_PLL_MATH // Kevin ADF1549 configuration. Arguably more optimized
 
 #if defined CONRAD_PLL_MATH
-volatile uint32_t ToSendFrequency = 900; // in hz 900000000
+volatile uint32_t ToSendFrequency = 920; // in hz 900000000
 
 uint32_t intVal = 36; // set to 900MHz initially
 uint32_t fracVal = 0;
@@ -85,7 +85,7 @@ uint32_t R7 = 0x7;
 // CONNECTED BLE FLASG
 volatile bool TESTING_FLAG = false;
 
-volatile bool power_down_pll = false;
+volatile bool power_down_pll_flag = false;
 volatile bool frequency_receipt_status = false;
 volatile bool BLE_IS_CONNECTED = false;
 volatile bool control_receipt_status = false;
@@ -100,19 +100,20 @@ bool FIRST_CONNECTION = true;
 
 volatile uint32_t pending_frequency = 0;
 
-bool freqHopFlag = false;
-bool wasHopping = false;         // cleanup flag
-uint32_t fhDelay = 1000000;      // in us (microseconds)
-uint32_t fhStep = 50 * 1000000;  // in hz
-uint32_t fhSpan = 300 * 1000000; // in hz
-uint32_t fhStart = 90000000;     // default updated each freq send
+// bool freqHopFlag = false;
+// bool wasHopping = false;         // cleanup flag
+// uint32_t fhDelay = 1000000;      // in us (microseconds)
+// uint32_t fhStep = 50 * 1000000;  // in hz
+// uint32_t fhSpan = 300 * 1000000; // in hz
+// uint32_t fhStart = 90000000;     // default updated each freq send
 
 volatile bool hop_delay_time_receipt_status = false;
 volatile bool hop_step_frequency_receipt_status = false;
 volatile bool span_frequency_receipt_status = false;
-volatile uint32_t delayTime_inMicro = 0;
+volatile uint32_t delayTime_inMillisec = 0;
 volatile uint32_t stepFrequency = 0;
 volatile uint32_t spanFrequency = 0;
+volatile uint32_t stopFrequency = 0;
 
 uint64_t lastHop = 0;
 
@@ -131,12 +132,13 @@ void calculateIntFrac(void);
 void updateR0(void);
 void sendPLLFreqRegisters(void);
 void latchFast(void);
-void updateR3(bool *power_down);
+void updateR3(volatile bool *power_down);
 void updateR1(void);
 void changeBorn(int bandInput);
 void storeRegisterValue(uint8_t *buffer, uint32_t *registerValues, uint16_t NumOfRegisters);
 void sendPLLAllRegisters(void);
 void restoreAllValues();
+void frequencyHopOnce();
 
 const uint32_t defaultFrequency = 920000000;
 /*********************************************************************************************************************************
@@ -283,6 +285,16 @@ static uint8_t characteristic_LED_tx[BUFFER_SIZE];
 // }
 // *HARD FOR OTHERS TO UNDERSTAND
 
+bool freqHop_timer_callback(struct repeating_timer *t)
+{
+    if (!hop_frequency_flag || ToSendFrequency >= stopFrequency)
+    {
+        return false; // Stop the timer
+    }
+    frequencyHopOnce();
+    return true; // continue the timer
+}
+
 int main()
 {
 
@@ -345,12 +357,14 @@ int main()
     // TURN THE BLUETOOTH ON!
     hci_power_control(HCI_POWER_ON);
 
-    // Store default Frequency = 900 MHz into the Frequency Buffer
+    // Store default Frequency = 920 MHz into the Frequency Buffer
     storeFrequency(characteristic_FREQUENCY_tx, defaultFrequency);
 
     // Store default register values into Register buffer
     uint32_t AllRegisterValues[13] = {intVal, fracVal, R0, R1, R2, R3, R41, R42, R51, R52, R61, R62, R7};
     storeRegisterValue(characteristic_REGISTER_tx, AllRegisterValues, 13);
+
+    struct repeating_timer timer;
 
     while (1)
     {
@@ -414,7 +428,6 @@ int main()
             { // check input against valid frequencies
                 if (ToSendFrequency >= (frequencyBands[i][0]) && ToSendFrequency <= (frequencyBands[i][1]))
                 {
-                    fhStart = ToSendFrequency; // freq hop update
                     calculateIntFrac();
                     updateR0();
                     updateR1();
@@ -430,6 +443,10 @@ int main()
                         printf("%X ", characteristic_REGISTER_tx[i]);
                     }
                     frequency_receipt_status = false;
+                    if (hop_frequency_flag)
+                    {
+                        hop_frequency_flag = false;
+                    }
                     break; // exit loop
                 }
             }
@@ -441,32 +458,42 @@ int main()
                 frequency_receipt_status = false;
             }
         }
-        if (hop_frequency_flag && !frequency_receipt_status)
+        // if (hop_frequency_flag && !frequency_receipt_status)
+        // {
+        //     uint64_t currentMicros = to_us_since_boot(get_absolute_time());
+        //     if (currentMicros - lastHop >= delayTime_inMicro && ToSendFrequency < endHopFrequency)
+        //     {
+        //         ToSendFrequency += stepFrequency;
+        //         lastHop = currentMicros;
+        //         for (int i = 0; i < BANDS; i++)
+        //         {
+        //             if (ToSendFrequency >= (frequencyBands[i][0]) && ToSendFrequency <= (frequencyBands[i][1]))
+        //             {
+        //                 calculateIntFrac();
+        //                 updateR0();
+        //                 updateR1();
+        //                 updateR3(&power_down_pll_flag);
+        //                 changeBorn(i);
+        //                 sendPLLFreqRegisters();
+        //                 uint32_t AllRegisterValues[6] = {intVal, fracVal, R0, R1, R2, R3};
+        //                 storeRegisterValue(characteristic_REGISTER_tx, AllRegisterValues, 6);
+        //             }
+        //         }
+        //     }
+        //     if (ToSendFrequency >= endHopFrequency)
+        //     {
+        //         hop_frequency_flag = false;
+        //     }
+        // }
+        if (hop_step_frequency_receipt_status == true)
         {
-            uint64_t currentMicros = to_us_since_boot(get_absolute_time());
-            if (currentMicros - lastHop >= delayTime_inMicro && ToSendFrequency < endHopFrequency)
-            {
-                ToSendFrequency += stepFrequency;
-                lastHop = currentMicros;
-                for (int i = 0; i < BANDS; i++)
-                {
-                    if (ToSendFrequency >= (frequencyBands[i][0]) && ToSendFrequency <= (frequencyBands[i][1]))
-                    {
-                        calculateIntFrac();
-                        updateR0();
-                        updateR1();
-                        updateR3(&power_down_pll_flag);
-                        changeBorn(i);
-                        sendPLLFreqRegisters();
-                        uint32_t AllRegisterValues[6] = {intVal, fracVal, R0, R1, R2, R3};
-                        storeRegisterValue(characteristic_REGISTER_tx, AllRegisterValues, 6);
-                    }
-                }
-            }
-            if (ToSendFrequency >= endHopFrequency)
-            {
-                hop_frequency_flag = false;
-            }
+            printf("Step Frequency received: %u", stepFrequency);
+            hop_step_frequency_receipt_status = false;
+        }
+
+        if (hop_frequency_flag == true)
+        {
+            add_repeating_timer_ms(delayTime_inMillisec, freqHop_timer_callback, NULL, &timer);
         }
 
         if (send_all_registers_flag == true)
@@ -625,7 +652,7 @@ void latchFast(void)
     }
 }
 
-void updateR3(bool *power_down)
+void updateR3(volatile bool *power_down)
 {
     if (ToSendFrequency <= 1370)
     {
@@ -639,14 +666,14 @@ void updateR3(bool *power_down)
     {
         R3 = 0x300A3 | (negBld << 22);
     }
-    //            negBld
+    //           negBld=100
     // 0b:  0000 0001 0000 0011 0000 0000 1010 0011
     // 0x:   0    1    0    3    0    0    A    3
     else
     {
         R3 = 0x30083 | (negBld << 22);
     }
-    //             negBld
+    //           negBld=100
     // 0b:  0000 0001 0000 0011 0000 0000 1000 0011
     // 0x:   0    1    0    3    0    0    8    3
 }
@@ -704,8 +731,25 @@ void restoreAllValues()
     uint32_t AllRegisterValues[13] = {intVal, fracVal, R0, R1, R2, R3, R41, R42, R51, R52, R61, R62, R7};
     storeRegisterValue(characteristic_REGISTER_tx, AllRegisterValues, 13);
     sendPLLAllRegisters();
-    freqHopFlag = false;
-    fhDelay = 1000000;
-    fhStep = 50 * 1000000;
-    fhSpan = 300 * 1000000;
+}
+
+void frequencyHopOnce()
+{
+    if (ToSendFrequency < stopFrequency)
+    {
+        ToSendFrequency += stepFrequency;
+        for (int i = 0; i < BANDS; i++)
+        {
+            if (ToSendFrequency >= frequencyBands[i][0] && ToSendFrequency <= frequencyBands[i][1])
+            {
+                calculateIntFrac();
+                changeBorn(i);
+                updateR0();
+                updateR1();
+                updateR3(&power_down_pll_flag);
+                sendPLLFreqRegisters();
+                break;
+            }
+        }
+    }
 }

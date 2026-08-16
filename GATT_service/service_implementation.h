@@ -21,10 +21,10 @@ extern volatile bool hop_step_frequency_receipt_status;
 extern volatile bool span_frequency_receipt_status;
 extern volatile uint32_t ToSendFrequency;
 extern volatile uint32_t pending_frequency;
-extern volatile uint32_t delayTime_inMicro;
+extern volatile uint32_t delayTime_inMillisec;
 extern volatile uint32_t stepFrequency;
 extern volatile uint32_t spanFrequency;
-extern volatile uint32_t endHopFrequency;
+extern volatile uint32_t stopFrequency;
 
 // Flags between this file and main "PLL_PICOW.c".
 extern volatile bool power_down_pll_flag;
@@ -301,9 +301,8 @@ static int PLL_service_write_callback(hci_con_handle_t con_handle, uint16_t attr
             switch (*buffer)
             {
             case 0x00:
-                uint32_t delayTime_inMillisec = *(buffer + 1) | *(buffer + 2) << 8 | *(buffer + 3) << 16 | *(buffer + 4) << 24;
+                delayTime_inMillisec = *(buffer + 1) | *(buffer + 2) << 8 | *(buffer + 3) << 16 | *(buffer + 4) << 24;
                 memcpy(instance->characteristic_hop_value, buffer + 1, 4);
-                delayTime_inMicro = delayTime_inMillisec * 1000;
                 hop_delay_time_receipt_status = true;
                 break;
 
@@ -315,10 +314,10 @@ static int PLL_service_write_callback(hci_con_handle_t con_handle, uint16_t attr
                 break;
 
             case 0x02:
-                uint32_t spanFrequency_inHz = *(buffer + 1) | *(buffer + 2) << 8 | *(buffer + 3) << 16 | *(buffer + 4) << 24;
-                memcpy(instance->characteristic_hop_value + 8, buffer + 1, 4);
-                spanFrequency = spanFrequency_inHz / 1000000;
-                endHopFrequency = spanFrequency + ToSendFrequency;
+                uint32_t stopFrequency_inHz = *(buffer + 1) | *(buffer + 2) << 8 | *(buffer + 3) << 16 | *(buffer + 4) << 24;
+                stopFrequency = stopFrequency_inHz / 1000000;
+                spanFrequency = stopFrequency - ToSendFrequency;
+                storeFrequency(instance->characteristic_hop_value + 8, spanFrequency);
                 span_frequency_receipt_status = true;
                 break;
 

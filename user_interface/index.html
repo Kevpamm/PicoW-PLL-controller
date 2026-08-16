@@ -49,7 +49,7 @@
                 <div id="power-down-div">
                     <span id="switch-label">PLL Power</span>
                     <label id="pll-power-switch">
-                        <input id="pll-power-input" class="cb" type="checkbox" disabled/>
+                        <input id="pll-power-input" class="cb" type="checkbox" disabled />
                         <span class="toggle">
                             <span class="left">off</span>
                             <span class="right">on</span>
@@ -189,6 +189,8 @@
     var frequencyMHz;
     var delayms;
 
+    const frequency = [[920, 949], [970, 996], [1074, 1106], [1209, 1266], [1270, 1323], [1442, 1514], [1695, 1811], [2142, 2401]];
+
     // Connect Button (search for BLE Devices only if BLE is available)
     connectButton.addEventListener('click', (event) => {
         if (isWebBluetoothEnabled()) {
@@ -203,7 +205,6 @@
     enterFreqButton.addEventListener("click", () => sendFrequency(frequencyInput.value));
 
     // Control Buttons
-    pllPowerSwitch.addEventListener('click', () => writeControlCharacteristic(0));
     allRegButton.addEventListener('click', () => writeControlCharacteristic(1));
     freqRegButton.addEventListener('click', () => writeControlCharacteristic(2));
     defaultsButton.addEventListener('click', () => writeControlCharacteristic(3));
@@ -212,18 +213,37 @@
     bleDataOffButton.addEventListener('click', () => writeControlCharacteristic(6));
     fastPinOnButton.addEventListener('click', () => writeControlCharacteristic(7));
     fastPinOffButton.addEventListener('click', () => writeControlCharacteristic(8));
+    pllPowerSwitch.addEventListener('change', () => {
 
+        if (bleServer && bleServer.connected) {
+
+            if (pllPowerSwitch.checked) {
+                console.log("PLL Power ON");
+                writeControlCharacteristic(0);
+            }
+            else {
+                console.log("PLL Power OFF");
+                writeControlCharacteristic(0);
+            }
+
+        }
+        else {
+            pllPowerSwitch.checked = false;
+        }
+
+    });
+    
     // Freq Hop Buttons
     enterDelayButton.addEventListener('click', () => sendHopCommand(0, delayInput.value));
     enterStepButton.addEventListener('click', () => sendHopCommand(1, stepInput.value));
     enterSpanButton.addEventListener('click', () => sendHopCommand(2, spanInput.value));
     hopOnButton.addEventListener('click', () => sendHopCommand(3, 0));
     hopOffButton.addEventListener('click', () => sendHopCommand(4, 0));
-
+    
     // Write to the ESP32 LED Characteristic
     LedOnButton.addEventListener('click', () => writeOnCharacteristic(1));
     LedOffButton.addEventListener('click', () => writeOnCharacteristic(0));
-
+    
     // Check if BLE is available in your Browser
     function isWebBluetoothEnabled() {
         if (!navigator.bluetooth) {
@@ -247,6 +267,8 @@
                 bleStateContainer.innerHTML = 'Connected to device ' + device.name;
                 bleStateContainer.style.color = "#24af37";
                 device.addEventListener('gattservicedisconnected', onDisconnected);
+                pllPowerSwitch.disabled = false;
+                pllPowerSwitch.checked = true;
                 return device.gatt.connect();
             })
             .then(gattServer => {
@@ -316,7 +338,8 @@
         console.log('Device Disconnected:', event.target.device.name);
         bleStateContainer.innerHTML = "Device disconnected";
         bleStateContainer.style.color = "#d13a30";
-
+        pllPowerSwitch.disabled = true;
+        pllPowerSwitch.checked = false;
         connectToDevice();
     }
 
@@ -411,7 +434,8 @@
         stepValue.innerHTML = (tempContainer >>> 0) / 1000000;
 
         tempContainer = dataArray[8] | (dataArray[9] << 8) | (dataArray[10] << 16) | (dataArray[11] << 24);
-        spanValue.innerHTML = (tempContainer >>> 0) / 1000000;
+        let targetFreq = (tempContainer >>> 0) / 1000000;
+        spanValue.innerHTML = targetFreq;
 
     }
 
@@ -449,9 +473,25 @@
                         value = value * 1000; //convert from ms to us
 
                         // Step and Span   
-                    } else if (index == 1 || index == 2) {
+                    } else if (index == 1) {
                         value = value * 1000000; //convert from MHz to Hz
 
+                    } else if (index == 2) {
+                        value += frequencyMHz;
+                        for (let i = 0; i < frequency.length; i++) {
+                            const [currentStart, currentEnd] = frequency[i];
+                            const prevEnd = i > 0 ? frequency[i - 1][1] : null;
+                            if (prevEnd !== null && value < currentStart) {
+                                value = value - prevEnd >= currentStart - value ? currentStart : prevEnd;
+                                break;
+                            }
+                            else {
+                                if (value <= currentEnd) {
+                                    break;
+                                }
+                            }
+                        }
+                        value = value * 1000000;
                     } // off and on indexes keep 0 value 
 
                     console.log("Found the hop characteristic: ", characteristic.uuid);
@@ -477,7 +517,6 @@
                     console.log("Found the control characteristic: ", characteristic.uuid);
                     const data = new Uint8Array([value]);
                     return characteristic.writeValue(data);
-                    pllPowerSwitch.disabled = false;
                 })
                 .then(() => {
                     latestValueSent.innerHTML = value;
@@ -487,7 +526,6 @@
                     console.error("Error writing to the control characteristic: ", error);
                 });
         } else {
-            pllPowerSwitch.disabled = true;
             console.error("Bluetooth is not connected. Cannot write to characteristic.")
             window.alert("Bluetooth is not connected. Cannot write to characteristic. \n Connect to BLE first!")
         }
