@@ -434,7 +434,7 @@
         stepValue.innerHTML = (tempContainer >>> 0) / 1000000;
 
         tempContainer = dataArray[8] | (dataArray[9] << 8) | (dataArray[10] << 16) | (dataArray[11] << 24);
-        let targetFreq = (tempContainer >>> 0) / 1000000;
+        let targetFreq = (tempContainer >>> 0);
         spanValue.innerHTML = targetFreq;
 
     }
@@ -477,7 +477,11 @@
                         value = value * 1000000; //convert from MHz to Hz
 
                     } else if (index == 2) {
+                        console.log("frequencyMHz before adding to value: ", frequencyMHz);
+                        console.log("Span value entered by user: ", value);
+                        value = parseInt(value, 10);
                         value += frequencyMHz;
+                        console.log("Span value after adding frequencyMHz: ", value);
                         for (let i = 0; i < frequency.length; i++) {
                             const [currentStart, currentEnd] = frequency[i];
                             const prevEnd = i > 0 ? frequency[i - 1][1] : null;
@@ -492,6 +496,7 @@
                             }
                         }
                         value = value * 1000000;
+                        console.log("Stop frequency = (entered_span + frequencyMHz) * 1000000 = ", value);
                     } // off and on indexes keep 0 value 
 
                     console.log("Found the hop characteristic: ", characteristic.uuid);

@@ -14,6 +14,7 @@
 static inline void storeFrequency(uint8_t *field, uint32_t frequency);
 static inline uint32_t parseFrequency(uint8_t *buffer, uint16_t buffer_size);
 static inline void notify_register_characteristic(void);
+static inline void notify_frequency_characteristic(void);
 
 extern volatile bool frequency_receipt_status;
 extern volatile bool hop_delay_time_receipt_status;
@@ -21,7 +22,7 @@ extern volatile bool hop_step_frequency_receipt_status;
 extern volatile bool span_frequency_receipt_status;
 extern volatile uint32_t ToSendFrequency;
 extern volatile uint32_t pending_frequency;
-extern volatile uint32_t delayTime_inMillisec;
+extern volatile int32_t delayTime_inMillisec;
 extern volatile uint32_t stepFrequency;
 extern volatile uint32_t spanFrequency;
 extern volatile uint32_t stopFrequency;
@@ -332,12 +333,12 @@ static int PLL_service_write_callback(hci_con_handle_t con_handle, uint16_t attr
 
             case 0x03:
                 hop_command_flag = true;
-                printf("hop flag on");
+                printf("hop flag on\n");
                 return 0;
 
             case 0x04:
                 hop_command_flag = false;
-                printf("hop flag off");
+                printf("hop flag off\n");
                 return 0;
 
             default:
@@ -474,6 +475,28 @@ static inline void notify_register_characteristic(void)
         instance->callback_Register.callback = &characteristic_register_callback;
         instance->callback_Register.context = (void *)instance;
         att_server_register_can_send_now_callback(&instance->callback_Register, instance->con_handle);
+    }
+}
+
+// This function will notify the client of the change in frequency characteristic, so the client knows there's a change.
+//
+// I need this function because without it, only the WRITE callback function of the freq characteristic has notification set up,
+// other functions for freq characteristics don't. This means the client only gets notification of the freq change when the client WRITES to the PICO.
+//
+// By manually calling this function, I can have the client receive the notification of the frequency characteristic whenever I want.
+//
+// I'm using this function for 'frequency hopping' feature. I notify the client of the last frequency the VCO hops to,
+// so the client knows and updates the new frequency on their side.
+// 
+// *Note: the client is the laptop.
+static inline void notify_frequency_characteristic(void)
+{
+    PLL_service_t *instance = &service_object;
+    if (instance->characteristic_frequency_client_configuration)
+    {
+        instance->callback_Frequency.callback = &characteristic_frequency_callback;
+        instance->callback_Frequency.context = (void *)instance;
+        att_server_register_can_send_now_callback(&instance->callback_Frequency, instance->con_handle);
     }
 }
 

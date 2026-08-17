@@ -95,9 +95,11 @@ volatile bool restore_default_registers_flag = false;
 volatile bool register_notification_first_on = false;
 volatile bool hop_command_flag = false;
 volatile bool led_flag = false;
+
 bool POWER_STATUS = true;
 bool is_hopping = false;
 bool hop = false;
+bool hop_complete = false;
 bool FIRST_CONNECTION = true;
 
 volatile uint32_t pending_frequency = 0;
@@ -112,7 +114,7 @@ volatile uint32_t pending_frequency = 0;
 volatile bool hop_delay_time_receipt_status = false;
 volatile bool hop_step_frequency_receipt_status = false;
 volatile bool span_frequency_receipt_status = false;
-volatile uint32_t delayTime_inMillisec = 0;
+volatile int32_t delayTime_inMillisec = 0;
 volatile uint32_t stepFrequency = 0;
 volatile uint32_t spanFrequency = 0;
 volatile uint32_t stopFrequency = 0;
@@ -291,6 +293,9 @@ bool freqHop_timer_callback(struct repeating_timer *t)
 {
     if (!hop_command_flag || ToSendFrequency >= stopFrequency)
     {
+        is_hopping = false;
+        hop_command_flag = false;
+        hop_complete = true;
         return false; // Stop the timer
     }
 
@@ -368,7 +373,6 @@ int main()
     storeRegisterValue(characteristic_REGISTER_tx, AllRegisterValues, 13);
 
     struct repeating_timer timer;
-    
 
     while (1)
     {
@@ -462,56 +466,46 @@ int main()
                 frequency_receipt_status = false;
             }
         }
-        // if (hop_command_flag && !frequency_receipt_status)
-        // {
-        //     uint64_t currentMicros = to_us_since_boot(get_absolute_time());
-        //     if (currentMicros - lastHop >= delayTime_inMicro && ToSendFrequency < endHopFrequency)
-        //     {
-        //         ToSendFrequency += stepFrequency;
-        //         lastHop = currentMicros;
-        //         for (int i = 0; i < BANDS; i++)
-        //         {
-        //             if (ToSendFrequency >= (frequencyBands[i][0]) && ToSendFrequency <= (frequencyBands[i][1]))
-        //             {
-        //                 calculateIntFrac();
-        //                 updateR0();
-        //                 updateR1();
-        //                 updateR3(&power_down_pll_flag);
-        //                 changeBorn(i);
-        //                 sendPLLFreqRegisters();
-        //                 uint32_t AllRegisterValues[6] = {intVal, fracVal, R0, R1, R2, R3};
-        //                 storeRegisterValue(characteristic_REGISTER_tx, AllRegisterValues, 6);
-        //             }
-        //         }
-        //     }
-        //     if (ToSendFrequency >= endHopFrequency)
-        //     {
-        //         hop_command_flag = false;
-        //     }
-        // }
+
         if (hop_step_frequency_receipt_status == true)
         {
             printf("Step Frequency received: %u\n", stepFrequency);
             hop_step_frequency_receipt_status = false;
         }
-        if (hop_delay_time_receipt_status) {
+        if (hop_delay_time_receipt_status)
+        {
             printf("Delay time receive: %u\n", delayTime_inMillisec);
             hop_delay_time_receipt_status = false;
         }
-        if (span_frequency_receipt_status) {
+        if (span_frequency_receipt_status)
+        {
             printf("Span receive: %u\n", spanFrequency);
             span_frequency_receipt_status = false;
         }
 
         if (hop_command_flag && !is_hopping)
         {
-            printf("Add timer\n");
-            add_repeating_timer_ms(delayTime_inMillisec, freqHop_timer_callback, NULL, &timer);
+            printf("Added timer\n");
+            int32_t delayTime_for_callback = -delayTime_inMillisec;
+            printf("delay time that goes in the timer: %d\n", delayTime_for_callback);
+            add_repeating_timer_ms(delayTime_for_callback, freqHop_timer_callback, NULL, &timer);
             is_hopping = true;
         }
-        if (hop == true) {
+        if (hop == true)
+        {
             hop = false;
             frequencyHopOnce();
+        }
+        if (hop_complete)
+        {
+            printf("==HOP IS ENDED==\n");;
+            printf("ToSendFrequency: %u\n", ToSendFrequency);
+            pending_frequency = ToSendFrequency * 1000000;
+            storeFrequency(characteristic_FREQUENCY_tx, pending_frequency);
+            notify_frequency_characteristic();
+            uint32_t AllRegisterValues[6] = {intVal, fracVal, R0, R1, R2, R3};
+            storeRegisterValue(characteristic_REGISTER_tx, AllRegisterValues, 6);
+            hop_complete = false;
         }
 
         if (send_all_registers_flag == true)
@@ -529,7 +523,7 @@ int main()
             restoreAllValues();
             restore_default_registers_flag = false;
         }
-        // This logic is false
+        
         if (power_down_pll_flag == true && POWER_STATUS)
         {
             updateR3(&power_down_pll_flag);
@@ -628,13 +622,13 @@ void sendPLLFreqRegisters(void)
         }
         latchFast();
     }
-    for (int i = 0; i < 3; i++)
-    {
-        pico_set_led(true);
-        sleep_ms(300);
-        pico_set_led(false);
-        sleep_ms(300);
-    }
+    // for (int i = 0; i < 3; i++)
+    // {
+    //     pico_set_led(true);
+    //     sleep_ms(300);
+    //     pico_set_led(false);
+    //     sleep_ms(300);
+    // }
 }
 
 void sendPLLAllRegisters(void)
