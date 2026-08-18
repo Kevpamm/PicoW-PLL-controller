@@ -254,7 +254,6 @@ static int PLL_service_write_callback(hci_con_handle_t con_handle, uint16_t attr
         {
             memcpy(instance->characteristic_control_value, buffer, 1);
             uint8_t ControlCommandReceived = *buffer;
-
             if (ControlCommandReceived == POWER_DOWN_PLL)
             {
                 power_down_pll_flag = true;
@@ -281,7 +280,7 @@ static int PLL_service_write_callback(hci_con_handle_t con_handle, uint16_t attr
             {
                 printf("Pico-W feature \"BLE_data_on\" has not been added!\n");
             }
-            else if (ControlCommandReceived == FAST_PIN_OFF__CONTROL_ENUM || FAST_PIN_ON__CONTROL_ENUM)
+            else if (ControlCommandReceived == FAST_PIN_OFF__CONTROL_ENUM || ControlCommandReceived == FAST_PIN_ON__CONTROL_ENUM)
             {
                 printf("Pico-W only sends data in Fast-pin mode. This feature cannot be turned off.\n");
             }
