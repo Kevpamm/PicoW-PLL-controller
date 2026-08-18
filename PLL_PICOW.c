@@ -17,7 +17,7 @@
 // #define KEVIN_PLL_MATH // Kevin ADF1549 configuration. Arguably more optimized
 
 #if defined CONRAD_PLL_MATH
-volatile uint32_t ToSendFrequency = 920; // in hz 900000000
+volatile uint32_t frequencyToPLL_inHz = 920000000; // in hz 900000000
 
 uint32_t intVal = 36; // set to 900MHz initially
 uint32_t fracVal = 0;
@@ -44,7 +44,7 @@ uint32_t R7 = 0x7;
 
 #elif defined KEVIN_PLL_MATH
 // I MUST SET REFERENCE DOUBLER DB20 BIT ON
-uint32_t ToSendFrequency = 920; // in hz 900000000
+uint32_t frequencyToPLL_inHz = 920000000; // in hz 900000000
 uint32_t intVal = 23;           // set to 900MHz initially
 uint32_t fracVal = 0;
 
@@ -102,7 +102,7 @@ bool hop = false;
 bool hop_complete = false;
 bool FIRST_CONNECTION = true;
 
-volatile uint32_t pending_frequency = 0;
+volatile uint32_t frequencyFromClient_inHz = 0;
 
 // bool freqHopFlag = false;
 // bool wasHopping = false;         // cleanup flag
@@ -115,16 +115,16 @@ volatile bool hop_delay_time_receipt_status = false;
 volatile bool hop_step_frequency_receipt_status = false;
 volatile bool span_frequency_receipt_status = false;
 volatile int32_t delayTime_inMillisec = 0;
-volatile uint32_t stepFrequency = 0;
-volatile uint32_t spanFrequency = 0;
-volatile uint32_t stopFrequency = 0;
+volatile uint32_t stepFrequency_inHz = 0;
+volatile uint32_t spanFrequency_inHz = 0;
+volatile uint32_t stopFrequency_inHz = 0;
 
 uint64_t lastHop = 0;
 
-// NEW SUPPORTED FREQUENCY BANDS
-const uint32_t frequencyBands[BANDS][2] = {{920, 949}, {970, 996}, {1074, 1106}, {1209, 1266}, {1270, 1323}, {1442, 1514}, {1695, 1811}, {2142, 2401}};
+// NEW SUPPORTED FREQUENCY BANDS in Hz
+const uint32_t frequencyBands[BANDS][2] = {{920000000, 949000000}, {970000000, 996000000}, {1074000000, 1106000000}, {1209000000, 1266000000}, {1270000000, 1323000000}, {1442000000, 1514000000}, {1695000000, 1811000000}, {2142000000, 2401000000}};
 
-// OLD SUPPORTED FREQUENCY BANDS
+// OLD SUPPORTED FREQUENCY BANDS in MHz
 // const uint32_t frequencyBands[BANDS][2] = {{890, 922},{951, 997},{1039, 1103},{1140,1204},{1196,1285},{1305,1406},{1524,1709},{1815,2105}};
 const bool bornSets[BANDS][3] = {{1, 1, 1}, {1, 1, 0}, {0, 1, 1}, {0, 1, 0}, {1, 0, 1}, {1, 0, 0}, {0, 0, 1}, {0, 0, 0}};
 
@@ -144,7 +144,7 @@ void sendPLLAllRegisters(void);
 void restoreAllValues();
 void frequencyHopOnce();
 
-const uint32_t defaultFrequency = 920000000;
+const uint32_t defaultFrequency_inHz = 920000000; //920 MHz
 /*********************************************************************************************************************************
  * THIS IS THE DATA PACKET THAT WE ADVERTISE
  * Bluetooth clients (laptops) and scanners discover this packet and learn info about our PICO W & its BLE service UUID
@@ -285,13 +285,13 @@ static uint8_t characteristic_LED_tx[BUFFER_SIZE];
 
 // uint32_t catalyst = 0x000000FF; why did I name it catalyst? @.@
 // for (int i = 0; i < 4; i++) {
-//     characteristic_FREQUENCY_tx[i] = defaultFrequency & (catalyst << (8*i));
+//     characteristic_FREQUENCY_tx[i] = defaultFrequency_inHz & (catalyst << (8*i));
 // }
 // *HARD FOR OTHERS TO UNDERSTAND
 
 bool freqHop_timer_callback(struct repeating_timer *t)
 {
-    if (!hop_command_flag || ToSendFrequency >= stopFrequency)
+    if (!hop_command_flag || frequencyToPLL_inHz >= stopFrequency_inHz)
     {
         is_hopping = false;
         hop_command_flag = false;
@@ -366,7 +366,7 @@ int main()
     hci_power_control(HCI_POWER_ON);
 
     // Store default Frequency = 920 MHz into the Frequency Buffer
-    storeFrequency(characteristic_FREQUENCY_tx, defaultFrequency);
+    storeFrequency(characteristic_FREQUENCY_tx, defaultFrequency_inHz);
 
     // Store default register values into Register buffer
     uint32_t AllRegisterValues[13] = {intVal, fracVal, R0, R1, R2, R3, R41, R42, R51, R52, R61, R62, R7};
@@ -424,8 +424,8 @@ int main()
 
         if (frequency_receipt_status == true)
         {
-            ToSendFrequency = pending_frequency / 1000000;
-            printf("\nFrequency Buffer after receiving frequency 1 %u: ", ToSendFrequency);
+            frequencyToPLL_inHz = frequencyFromClient_inHz;
+            printf("\nFrequency Buffer after receiving frequency 1 %u: ", frequencyToPLL_inHz);
             for (int i = 0; i < BUFFER_SIZE; i++)
             {
                 printf("%X ", characteristic_FREQUENCY_tx[i]);
@@ -434,7 +434,7 @@ int main()
 
             for (int i = 0; i < BANDS; i++)
             { // check input against valid frequencies
-                if (ToSendFrequency >= (frequencyBands[i][0]) && ToSendFrequency <= (frequencyBands[i][1]))
+                if (frequencyToPLL_inHz >= (frequencyBands[i][0]) && frequencyToPLL_inHz <= (frequencyBands[i][1]))
                 {
                     calculateIntFrac();
                     updateR0();
@@ -445,7 +445,7 @@ int main()
                     sendPLLFreqRegisters();
                     uint32_t AllRegisterValues[13] = {intVal, fracVal, R0, R1, R2, R3, R41, R42, R51, R52, R61, R62, R7}; // No need to update all 13. only three values in the buffer are changed: R0, R1, R3
                     storeRegisterValue(characteristic_REGISTER_tx, AllRegisterValues, 13);
-                    printf("\nCharacteristic Buffer after receiving frequency %u: ", ToSendFrequency);
+                    printf("\nCharacteristic Buffer after receiving frequency %u: ", frequencyToPLL_inHz);
                     for (int i = 0; i < BUFFER_SIZE; i++)
                     {
                         printf("%X ", characteristic_REGISTER_tx[i]);
@@ -469,7 +469,7 @@ int main()
 
         if (hop_step_frequency_receipt_status == true)
         {
-            printf("Step Frequency received: %u\n", stepFrequency);
+            printf("Step Frequency received: %u\n", stepFrequency_inHz);
             hop_step_frequency_receipt_status = false;
         }
         if (hop_delay_time_receipt_status)
@@ -479,7 +479,7 @@ int main()
         }
         if (span_frequency_receipt_status)
         {
-            printf("Span receive: %u\n", spanFrequency);
+            printf("Span receive: %u\n", spanFrequency_inHz);
             span_frequency_receipt_status = false;
         }
 
@@ -499,9 +499,8 @@ int main()
         if (hop_complete)
         {
             printf("==HOP IS ENDED==\n");;
-            printf("ToSendFrequency: %u\n", ToSendFrequency);
-            pending_frequency = ToSendFrequency * 1000000;
-            storeFrequency(characteristic_FREQUENCY_tx, pending_frequency);
+            printf("ToSendFreq: %u\n", frequencyToPLL_inHz);
+            storeFrequency(characteristic_FREQUENCY_tx, frequencyToPLL_inHz);
             notify_frequency_characteristic();
             uint32_t AllRegisterValues[6] = {intVal, fracVal, R0, R1, R2, R3};
             storeRegisterValue(characteristic_REGISTER_tx, AllRegisterValues, 6);
@@ -594,11 +593,11 @@ static void pico_set_led(bool led_on)
 void calculateIntFrac(void)
 {
 #if defined(CONRAD_PLL_MATH)
-    intVal = ToSendFrequency / 25;
-    fracVal = (uint32_t)(round((double)(ToSendFrequency - (intVal * 25)) * 1000000 * 1.34217727));
+    intVal = frequencyToPLL_inHz / 25000000;
+    fracVal = (uint32_t)(round((double)(frequencyToPLL_inHz - (intVal * 25000000)) * 1.34217727));
 #elif defined(KEVIN_PLL_MATH)
-    intVal = ToSendFrequency / 40;
-    fracVal = (uint32_t)(round((double)(ToSendFrequency - (intVal * 40)) * 1000000 * 0.8388608));
+    intVal = frequencyToPLL_inHz / 40000000;
+    fracVal = (uint32_t)(round((double)(frequencyToPLL_inHz - (intVal * 40000000)) * 0.8388608));
 #endif
 }
 
@@ -670,7 +669,7 @@ void latchFast(void)
 
 void updateR3(volatile bool *power_down)
 {
-    if (ToSendFrequency <= 1370)
+    if (frequencyToPLL_inHz <= 1370)
     {
         negBld = 0b101;
     }
@@ -737,8 +736,8 @@ void storeRegisterValue(uint8_t *buffer, uint32_t *registerValues, uint16_t NumO
 
 void restoreAllValues()
 {
-    storeFrequency(characteristic_FREQUENCY_tx, defaultFrequency);
-    ToSendFrequency = 920;
+    storeFrequency(characteristic_FREQUENCY_tx, defaultFrequency_inHz);
+    frequencyToPLL_inHz = defaultFrequency_inHz;
     calculateIntFrac();
     changeBorn(0);
     updateR0();
@@ -751,12 +750,12 @@ void restoreAllValues()
 
 void frequencyHopOnce()
 {
-    if (ToSendFrequency < stopFrequency)
+    if (frequencyToPLL_inHz < stopFrequency_inHz)
     {
-        ToSendFrequency += stepFrequency;
+        frequencyToPLL_inHz += stepFrequency_inHz;
         for (int i = 0; i < BANDS; i++)
         {
-            if (ToSendFrequency >= frequencyBands[i][0] && ToSendFrequency <= frequencyBands[i][1])
+            if (frequencyToPLL_inHz >= frequencyBands[i][0] && frequencyToPLL_inHz <= frequencyBands[i][1])
             {
                 calculateIntFrac();
                 changeBorn(i);
