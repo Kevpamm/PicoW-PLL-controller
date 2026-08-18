@@ -1,0 +1,268 @@
+html {
+    height: 100%;
+    font-family: Arial, Helvetica, sans-serif;
+    display: inline-block;
+    text-align: center;
+}
+
+h1 {
+    font-size: 1.8rem;
+    color: #eda326;
+}
+
+h2 {
+    color: white;
+}
+
+h3 {
+    font-size: 1rem;
+    color: #eda326;
+}
+
+.topnav {
+    overflow: hidden;
+    background-color: #0A1128;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.topnav img {
+    margin-right: 10px;
+    box-shadow: 2px 2px 12px 2px rgba(100, 100, 100, .5);
+}
+
+body {
+    height: 100%;
+    margin: 0;
+    background-image: linear-gradient(to bottom right, #ad42f5, #370b4f);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+.content {
+    padding: 50px;
+}
+
+
+.card-grid {
+    max-width: 800px;
+    margin: 0 auto;
+    margin-bottom: 30px;
+    display: grid;
+    grid-gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.card {
+    background-color: #340b4a;
+    box-shadow: 4px 4px 16px 4px rgba(200, 200, 200, .3);
+    border-radius: 5px;
+
+}
+
+
+button {
+    color: white;
+    padding: 14px 20px;
+    margin: 4px 2px;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    box-shadow: 4px 4px 16px 4px rgba(0, 0, 0, .4);
+}
+
+.form-control {
+    height: 30px;
+}
+
+.enterButton {
+    background-color: #1b8a94;
+}
+
+#power-down-div {
+    width: 100%;
+    height: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+#switch-label {
+    display: block;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: white;
+}
+
+#pll-power-switch {
+    font-size: 17px;
+    position: relative;
+    display: inline-block;
+    width: 5em;
+    height: 2.5em;
+    user-select: none;
+}
+
+
+/* Hide default HTML checkbox */
+#pll-power-switch .cb {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* The slider */
+.toggle {
+    position: absolute;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    left: 50%;
+    translate: -50% 0;
+    background-color: #02666f;
+    border-radius: 0.1em;
+    transition: 0.4s;
+    text-transform: uppercase;
+    font-weight: 700;
+    overflow: hidden;
+    box-shadow: -0.3em 0 0 0 #02666f, -0.3em 0.3em 0 0 #02666f,
+        0.3em 0 0 0 #02666f, 0.3em 0.3em 0 0 #02666f, 0 0.3em 0 0 #02666f;
+}
+
+.toggle>.left {
+    position: absolute;
+    display: flex;
+    width: 50%;
+    height: 88%;
+    background-color: #f3f3f3;
+    color: #373737;
+    left: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    transform-origin: right;
+    transform: rotateX(10deg);
+    transform-style: preserve-3d;
+    transition: all 150ms;
+}
+
+.left::before {
+    position: absolute;
+    content: "";
+    width: 100%;
+    height: 100%;
+    background-color: rgb(206, 206, 206);
+    transform-origin: center left;
+    transform: rotateY(90deg);
+}
+
+.left::after {
+    position: absolute;
+    content: "";
+    width: 100%;
+    height: 100%;
+    background-color: rgb(112, 112, 112);
+    transform-origin: center bottom;
+    transform: rotateX(90deg);
+}
+
+.toggle>.right {
+    position: absolute;
+    display: flex;
+    width: 50%;
+    height: 88%;
+    background-color: #f3f3f3;
+    color: rgb(206, 206, 206);
+    right: 1px;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    transform-origin: left;
+    transform: rotateX(10deg) rotateY(-45deg);
+    transform-style: preserve-3d;
+    transition: all 150ms;
+}
+
+.right::before {
+    position: absolute;
+    content: "";
+    width: 100%;
+    height: 100%;
+    background-color: rgb(206, 206, 206);
+    transform-origin: center right;
+    transform: rotateY(-90deg);
+}
+
+.right::after {
+    position: absolute;
+    content: "";
+    width: 100%;
+    height: 100%;
+    background-color: rgb(112, 112, 112);
+    transform-origin: center bottom;
+    transform: rotateX(90deg);
+}
+
+#pll-power-switch input:checked+.toggle>.left {
+    transform: rotateX(10deg) rotateY(45deg);
+    color: rgb(206, 206, 206);
+}
+
+#pll-power-switch input:checked+.toggle>.right {
+    transform: rotateX(10deg) rotateY(0deg);
+    color: #487bdb;
+}
+
+.controlButton {
+    background-color: #1b8a94;
+    width: 150px;
+    margin: 4px 2px;
+    padding: 10px 5px;
+}
+
+.controlOffButton {
+    background-color: #5f6c6d;
+    width: 150px;
+    margin: 4px 2px;
+    padding: 10px 5px;
+}
+
+.connectButton {
+    background-color: #24af37;
+}
+
+.disconnectButton {
+    background-color: #d13a30;
+}
+
+.gray-label1 {
+    color: #adadad;
+    font-size: 1rem;
+}
+
+.gray-label2 {
+    color: #4d4d4d;
+    font-size: 1rem;
+}
+
+.reading {
+    font-size: 1.8rem;
+    color: white;
+}
+
+.reading2 {
+    color: #adadad;
+}
+
+.reading3 {
+    font-size: 1rem;
+    color: white;
+    background-color: #1b8a9477;
+    margin: 20px 50px 5px 50px;
+    padding: 3px 15px;
+    border-radius: 5px;
+    box-shadow: 0 0px 4px 4px rgba(0, 0, 0, 0.5);
+    text-align: center;
+}
