@@ -12,7 +12,7 @@
 #include "pico/bootrom.h"
 
 static inline void storeFrequency(uint8_t *field, uint32_t frequency);
-static inline uint32_t parseFrequency(uint8_t *buffer, uint16_t buffer_size);
+static inline uint32_t parse_32bit_buffer(uint8_t *buffer, uint16_t buffer_size);
 static inline void notify_register_characteristic(void);
 static inline void notify_frequency_characteristic(void);
 
@@ -20,12 +20,12 @@ extern volatile bool frequency_receipt_status;
 extern volatile bool hop_delay_time_receipt_status;
 extern volatile bool hop_step_frequency_receipt_status;
 extern volatile bool span_frequency_receipt_status;
-extern volatile uint32_t ToSendFrequency;
-extern volatile uint32_t pending_frequency;
+extern volatile uint32_t frequencyToPLL_inHz;
+extern volatile uint32_t frequencyFromClient_inHz;
 extern volatile int32_t delayTime_inMillisec;
-extern volatile uint32_t stepFrequency;
-extern volatile uint32_t spanFrequency;
-extern volatile uint32_t stopFrequency;
+extern volatile uint32_t stepFrequency_inHz;
+extern volatile uint32_t spanFrequency_inHz;
+extern volatile uint32_t stopFrequency_inHz;
 
 // Flags between this file and main "PLL_PICOW.c".
 extern volatile bool power_down_pll_flag;
@@ -214,7 +214,7 @@ static int PLL_service_write_callback(hci_con_handle_t con_handle, uint16_t attr
         {
             memcpy(instance->characteristic_frequency_value, buffer, 4);
             instance->characteristic_frequency_value_length = buffer_size;
-            pending_frequency = parseFrequency(buffer, buffer_size);
+            frequencyFromClient_inHz = parse_32bit_buffer(buffer, buffer_size);
             frequency_receipt_status = true;
         }
         else
@@ -309,24 +309,21 @@ static int PLL_service_write_callback(hci_con_handle_t con_handle, uint16_t attr
             switch (*buffer)
             {
             case 0x00:
-                uint32_t delayTime_inMicrosec = *(buffer + 1) | *(buffer + 2) << 8 | *(buffer + 3) << 16 | *(buffer + 4) << 24;
                 memcpy(instance->characteristic_hop_value, buffer + 1, 4);
-                delayTime_inMillisec = delayTime_inMicrosec / 1000;
+                delayTime_inMillisec = parse_32bit_buffer(instance->characteristic_hop_value, 4);
                 hop_delay_time_receipt_status = true;
                 break;
 
             case 0x01:
-                uint32_t stepFrequency_inHz = *(buffer + 1) | *(buffer + 2) << 8 | *(buffer + 3) << 16 | *(buffer + 4) << 24;
                 memcpy(instance->characteristic_hop_value + 4, buffer + 1, 4);
-                stepFrequency = stepFrequency_inHz / 1000000;
+                stepFrequency_inHz = parse_32bit_buffer(instance->characteristic_hop_value + 4, 4);
                 hop_step_frequency_receipt_status = true;
                 break;
 
             case 0x02:
-                uint32_t stopFrequency_inHz = *(buffer + 1) | *(buffer + 2) << 8 | *(buffer + 3) << 16 | *(buffer + 4) << 24;
-                stopFrequency = stopFrequency_inHz / 1000000;
-                spanFrequency = stopFrequency - ToSendFrequency;
-                storeFrequency(instance->characteristic_hop_value + 8, spanFrequency);
+                stopFrequency_inHz = *(buffer + 1) | *(buffer + 2) << 8 | *(buffer + 3) << 16 | *(buffer + 4) << 24;
+                spanFrequency_inHz = stopFrequency_inHz - frequencyToPLL_inHz;
+                storeFrequency(instance->characteristic_hop_value + 8, spanFrequency_inHz);
                 span_frequency_receipt_status = true;
                 break;
 
@@ -444,11 +441,11 @@ void PLL_service_server_init(uint8_t *frequency_ptr, uint8_t *control_ptr, uint8
     att_server_register_service_handler(&service_handler);
 }
 
-static inline uint32_t parseFrequency(uint8_t *buffer, uint16_t buffer_size)
+static inline uint32_t parse_32bit_buffer(uint8_t *buffer, uint16_t buffer_size)
 {
     if (buffer_size != 4)
     {
-        printf("The frequency is expected to be 32bits! It's currently not!");
+        printf("The buffer goes in parse_32bit_buffer is expected to be 32bits! It's currently not!");
         return 0;
     }
     uint32_t eight_last_bits = *buffer;

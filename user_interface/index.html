@@ -428,14 +428,14 @@
         //  console.log("Characteristic register values changed");
         const dataArray = new Uint8Array(value.buffer);
         var tempContainer = dataArray[0] | (dataArray[1] << 8) | (dataArray[2] << 16) | (dataArray[3] << 24);
-        delayValue.innerHTML = (tempContainer >>> 0) / 1000;
+        delayValue.innerHTML = (tempContainer >>> 0) ;
 
         tempContainer = dataArray[4] | (dataArray[5] << 8) | (dataArray[6] << 16) | (dataArray[7] << 24);
         stepValue.innerHTML = (tempContainer >>> 0) / 1000000;
 
         tempContainer = dataArray[8] | (dataArray[9] << 8) | (dataArray[10] << 16) | (dataArray[11] << 24);
         let targetFreq = (tempContainer >>> 0);
-        spanValue.innerHTML = targetFreq;
+        spanValue.innerHTML = targetFreq / 1000000;
 
     }
 
@@ -470,7 +470,7 @@
                 .then(characteristic => {
                     //delay
                     if (index == 0) {
-                        value = value * 1000; //convert from ms to us
+                        value = value /* * 1000; //convert from ms to us */
 
                         // Step and Span   
                     } else if (index == 1) {
