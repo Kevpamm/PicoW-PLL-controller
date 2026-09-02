@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - "user_interface/**"
-      - ".github/workflows/deploy-user-interface.yml"
+      - ".github/workflows/deploy_user_interface.yml"
 
   workflow_dispatch:
 
