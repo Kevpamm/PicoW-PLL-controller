@@ -3,7 +3,7 @@ name: Deploy User Interface to GitHub Pages
 on:
   push:
     branches:
-      - main
+      - Adjustable-Charge-Pump-Current
     paths:
       - "user_interface/**"
       - ".github/workflows/deploy_user_interface.yml"
