@@ -679,13 +679,13 @@ void sendPLLAllRegisters(void)
         }
         latchFast();
     }
-    for (int i = 0; i < 3; i++)
-    {
-        pico_set_led(true);
-        sleep_ms(300);
-        pico_set_led(false);
-        sleep_ms(300);
-    }
+    // for (int i = 0; i < 3; i++)
+    // {
+    //     pico_set_led(true);
+    //     sleep_ms(300);
+    //     pico_set_led(false);
+    //     sleep_ms(300);
+    // }
 }
 
 void latchFast(void)
@@ -707,7 +707,7 @@ void latchFast(void)
 
 void updateR3(volatile bool *power_down)
 {
-    if (frequencyToPLL_inHz <= 1370)
+    if (frequencyToPLL_inHz <= 1370000000)
     {
         negBld = 0b101;
     }
