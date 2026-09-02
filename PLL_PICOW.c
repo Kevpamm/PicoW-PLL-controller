@@ -18,8 +18,7 @@
 
 #if defined CONRAD_PLL_MATH
 volatile uint32_t frequencyToPLL_inHz = 920000000; // in hz 900000000
-
-uint32_t intVal = 36; // set to 900MHz initially
+uint32_t intVal = 36;                              // set to 900MHz initially
 uint32_t fracVal = 0;
 
 uint32_t muxVal = 0b0110;
@@ -45,7 +44,7 @@ uint32_t R7 = 0x7;
 #elif defined KEVIN_PLL_MATH
 // I MUST SET REFERENCE DOUBLER DB20 BIT ON
 uint32_t frequencyToPLL_inHz = 920000000; // in hz 900000000
-uint32_t intVal = 23;           // set to 900MHz initially
+uint32_t intVal = 23;                     // set to 900MHz initially
 uint32_t fracVal = 0;
 
 uint32_t muxVal = 0b0110;
@@ -136,15 +135,16 @@ void calculateIntFrac(void);
 void updateR0(void);
 void sendPLLFreqRegisters(void);
 void latchFast(void);
-void updateR3(volatile bool *power_down);
 void updateR1(void);
+void updateR2(volatile uint32_t *frequency_ptr); 
+void updateR3(volatile bool *power_down);
 void changeBorn(int bandInput);
 void storeRegisterValue(uint8_t *buffer, uint32_t *registerValues, uint16_t NumOfRegisters);
 void sendPLLAllRegisters(void);
 void restoreAllValues();
 void frequencyHopOnce();
 
-const uint32_t defaultFrequency_inHz = 920000000; //920 MHz
+const uint32_t defaultFrequency_inHz = 920000000; // 920 MHz
 /*********************************************************************************************************************************
  * THIS IS THE DATA PACKET THAT WE ADVERTISE
  * Bluetooth clients (laptops) and scanners discover this packet and learn info about our PICO W & its BLE service UUID
@@ -439,17 +439,25 @@ int main()
                     calculateIntFrac();
                     updateR0();
                     updateR1();
-                    printf("R1: %X\n", R1);
+                    // printf("R1: %X\n", R1);
                     updateR3(&power_down_pll_flag);
                     changeBorn(i);
-                    sendPLLFreqRegisters();
+                    if (i == 0 || i == 1 || i == 2 || i == 4)
+                    {
+                        sendPLLFreqRegisters();
+                    }
+                    else
+                    {
+                        updateR2(&frequencyToPLL_inHz);
+                        sendPLLAllRegisters();
+                    }
                     uint32_t AllRegisterValues[13] = {intVal, fracVal, R0, R1, R2, R3, R41, R42, R51, R52, R61, R62, R7}; // No need to update all 13. only three values in the buffer are changed: R0, R1, R3
                     storeRegisterValue(characteristic_REGISTER_tx, AllRegisterValues, 13);
-                    printf("\nCharacteristic Buffer after receiving frequency %u: ", frequencyToPLL_inHz);
-                    for (int i = 0; i < BUFFER_SIZE; i++)
-                    {
-                        printf("%X ", characteristic_REGISTER_tx[i]);
-                    }
+                    // printf("\nCharacteristic Buffer after receiving frequency %u: ", frequencyToPLL_inHz);
+                    // for (int i = 0; i < BUFFER_SIZE; i++)
+                    // {
+                    //     printf("%X ", characteristic_REGISTER_tx[i]);
+                    // }
                     frequency_receipt_status = false;
                     if (hop_command_flag)
                     {
@@ -498,7 +506,8 @@ int main()
         }
         if (hop_complete)
         {
-            printf("==HOP IS ENDED==\n");;
+            printf("==HOP IS ENDED==\n");
+            ;
             printf("ToSendFreq: %u\n", frequencyToPLL_inHz);
             storeFrequency(characteristic_FREQUENCY_tx, frequencyToPLL_inHz);
             notify_frequency_characteristic();
@@ -522,7 +531,7 @@ int main()
             restoreAllValues();
             restore_default_registers_flag = false;
         }
-        
+
         if (power_down_pll_flag == true && POWER_STATUS)
         {
             updateR3(&power_down_pll_flag);
@@ -609,7 +618,36 @@ void updateR1(void)
 {
     R1 = (phaseAdj << 28) | ((fracVal << 19) >> 4) | (phaseVal << 3) + 0b1;
 }
-
+void updateR2(volatile uint32_t *frequency_ptr)
+{
+    // This variable is too make sure the pointer doesn't change value during R2 being updated
+    // If Pico memory is extremely tight, no need for this temp variable
+    uint32_t frequency = *frequency_ptr;
+    if (frequency <= 1106000000 || (frequency >= 1270000000 && frequency <= 1323000000))
+    {
+        return;
+    }
+    else if (frequency >= 1209000000 && frequency <= 1266000000)
+    {
+        R2 = 0x0421000A;
+    }
+    else if (frequency >= 1442000000 && frequency <= 1514000000)
+    {
+        R2 = 0x0421000A;
+    }
+    else if (frequency >= 1695000000 && frequency <= 1811000000)
+    {
+        R2 = 0x0321000A;
+    }
+    else if (frequency >= 2142000000 && frequency <= 2401000000)
+    {
+        R2 = 0x0121000A;
+    }
+    else
+    {
+        return;
+    }
+}
 void sendPLLFreqRegisters(void)
 {
     uint32_t ToSendRegisters[3] = {R3, R1, R0};
@@ -762,7 +800,15 @@ void frequencyHopOnce()
                 updateR0();
                 updateR1();
                 updateR3(&power_down_pll_flag);
-                sendPLLFreqRegisters();
+                if (i == 0 || i == 1 || i == 2 || i == 4)
+                {
+                    sendPLLFreqRegisters();
+                }
+                else
+                {
+                    updateR2(&frequencyToPLL_inHz);
+                    sendPLLAllRegisters();
+                }
                 break;
             }
         }
