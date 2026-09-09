@@ -12,7 +12,8 @@
 #include "pico/cyw43_arch.h"
 #endif
 
-typedef struct {
+typedef struct
+{
     bool is_active;
     bool led_state;
     int32_t delay_in_millisec;
@@ -104,6 +105,7 @@ volatile bool restore_default_registers_flag = false;
 volatile bool register_notification_first_on = false;
 volatile bool hop_command_flag = false;
 volatile bool led_flag = false;
+volatile bool changeR2_flag = false;
 
 bool POWER_STATUS = true;
 bool is_hopping = false;
@@ -128,6 +130,7 @@ volatile int32_t delayTime_inMillisec = 0;
 volatile uint32_t stepFrequency_inHz = 0;
 volatile uint32_t spanFrequency_inHz = 0;
 volatile uint32_t stopFrequency_inHz = 0;
+volatile uint16_t charge_pump_current = 2500;
 
 uint64_t lastHop = 0;
 
@@ -149,14 +152,14 @@ void updateR0(void);
 void sendPLLFreqRegisters(void);
 void latchFast(void);
 void updateR1(void);
-void updateR2(volatile uint32_t *frequency_ptr); 
+void updateR2(volatile uint32_t *frequency_ptr);
+void updateR2Debugging(volatile uint16_t *current_in_micro_amp);
 void updateR3(volatile bool *power_down);
 void changeBorn(int bandInput);
 void storeRegisterValue(uint8_t *buffer, uint32_t *registerValues, uint16_t NumOfRegisters);
 void sendPLLAllRegisters(void);
 void restoreAllValues();
 void frequencyHopOnce();
-
 
 /*********************************************************************************************************************************
  * THIS IS THE DATA PACKET THAT WE ADVERTISE
@@ -297,7 +300,6 @@ static uint8_t characteristic_HOP_tx[BUFFER_SIZE];
 static uint8_t characteristic_REGISTER_tx[BUFFER_SIZE];
 static uint8_t characteristic_LED_tx[BUFFER_SIZE];
 
-
 bool freqHop_timer_callback(struct repeating_timer *t)
 {
     if (!hop_command_flag || frequencyToPLL_inHz >= stopFrequency_inHz)
@@ -311,8 +313,6 @@ bool freqHop_timer_callback(struct repeating_timer *t)
     hop = true;
     return true; // continue the timer
 }
-
-
 
 int main()
 {
@@ -456,17 +456,19 @@ int main()
                     // printf("R1: %X\n", R1);
                     updateR3(&power_down_pll_flag);
                     changeBorn(i);
-                    if (i == 0 || i == 1 || i == 2 || i == 4)
-                    {
-                        sendPLLFreqRegisters();
-                        startLed(&led_controller, 2, 300, 0);
-                    }
-                    else
-                    {
-                        updateR2(&frequencyToPLL_inHz);
-                        sendPLLAllRegisters();
-                        startLed(&led_controller, 6, 300, 0);
-                    }
+                    sendPLLFreqRegisters();
+                    startLed(&led_controller, 2, 300, 0);
+                    // if (i == 0 || i == 1 || i == 2 || i == 4)
+                    // {
+                    //     sendPLLFreqRegisters();
+                    //     startLed(&led_controller, 2, 300, 0);
+                    // }
+                    // else
+                    // {
+                    //     updateR2(&frequencyToPLL_inHz);
+                    //     sendPLLAllRegisters();
+                    //     startLed(&led_controller, 6, 300, 0);
+                    // }
                     uint32_t AllRegisterValues[13] = {intVal, fracVal, R0, R1, R2, R3, R41, R42, R51, R52, R61, R62, R7}; // No need to update all 13. only three values in the buffer are changed: R0, R1, R3
                     storeRegisterValue(characteristic_REGISTER_tx, AllRegisterValues, 13);
                     // printf("\nCharacteristic Buffer after receiving frequency %u: ", frequencyToPLL_inHz);
@@ -536,12 +538,21 @@ int main()
             sendPLLAllRegisters();
             startLed(&led_controller, 6, 300, 0);
             send_all_registers_flag = false;
+            uint32_t AllRegisterValues[13] = {intVal, fracVal, R0, R1, R2, R3, R41, R42, R51, R52, R61, R62, R7}; // No need to update all 13. only three values in the buffer are changed: R0, R1, R3
+            storeRegisterValue(characteristic_REGISTER_tx, AllRegisterValues, 13);
         }
         if (send_freq_registers_flag == true)
         {
             sendPLLFreqRegisters();
             startLed(&led_controller, 2, 300, 0);
             send_freq_registers_flag = false;
+            uint32_t AllRegisterValues[13] = {intVal, fracVal, R0, R1, R2, R3, R41, R42, R51, R52, R61, R62, R7}; // No need to update all 13. only three values in the buffer are changed: R0, R1, R3
+            storeRegisterValue(characteristic_REGISTER_tx, AllRegisterValues, 13);
+        }
+        if (changeR2_flag)
+        {
+            updateR2Debugging(&charge_pump_current);
+            changeR2_flag = false;
         }
         if (restore_default_registers_flag == true)
         {
@@ -616,12 +627,14 @@ static void pico_set_led(bool led_on)
 #endif
 }
 
-
-void startLed(LedController *led_controller_ptr, uint8_t repetition, int32_t delay_in_milli_sec, int64_t wait_in_millisec) {
-    if (led_controller_ptr == NULL) {
+void startLed(LedController *led_controller_ptr, uint8_t repetition, int32_t delay_in_milli_sec, int64_t wait_in_millisec)
+{
+    if (led_controller_ptr == NULL)
+    {
         return;
     }
-    if (repetition <= 0) {
+    if (repetition <= 0)
+    {
         led_controller_ptr->is_active = false;
         led_controller_ptr->led_state = false;
         led_controller_ptr->toggles_left = 0;
@@ -638,28 +651,33 @@ void startLed(LedController *led_controller_ptr, uint8_t repetition, int32_t del
     pico_set_led(led_controller_ptr->led_state);
 }
 
-void updateLed(LedController *led_controller_ptr) {
-    if (led_controller_ptr == NULL) {
+void updateLed(LedController *led_controller_ptr)
+{
+    if (led_controller_ptr == NULL)
+    {
         return;
     }
     if (!led_controller_ptr->is_active)
         return;
     int32_t now = to_ms_since_boot(get_absolute_time());
-    if ((now - led_controller_ptr->last_toggle_in_millisec >= led_controller_ptr->delay_in_millisec) && 
-        (now - led_controller_ptr->last_cycle_in_millisec >= led_controller_ptr->wait_time_in_millisec)) {
-            led_controller_ptr->last_toggle_in_millisec = now;
-            led_controller_ptr->led_state = !led_controller_ptr->led_state;
-            pico_set_led(led_controller_ptr->led_state);
-            led_controller_ptr->toggles_left--;
-            if (led_controller_ptr->toggles_left <= 0) {
-                led_controller_ptr->is_active = false;
-                led_controller_ptr->led_state = false;
-                pico_set_led(false);
-                return;
-            }
-            if (!led_controller_ptr->led_state) {
-                led_controller_ptr->last_cycle_in_millisec = to_ms_since_boot(get_absolute_time());
-            }
+    if ((now - led_controller_ptr->last_toggle_in_millisec >= led_controller_ptr->delay_in_millisec) &&
+        (now - led_controller_ptr->last_cycle_in_millisec >= led_controller_ptr->wait_time_in_millisec))
+    {
+        led_controller_ptr->last_toggle_in_millisec = now;
+        led_controller_ptr->led_state = !led_controller_ptr->led_state;
+        pico_set_led(led_controller_ptr->led_state);
+        led_controller_ptr->toggles_left--;
+        if (led_controller_ptr->toggles_left <= 0)
+        {
+            led_controller_ptr->is_active = false;
+            led_controller_ptr->led_state = false;
+            pico_set_led(false);
+            return;
+        }
+        if (!led_controller_ptr->led_state)
+        {
+            led_controller_ptr->last_cycle_in_millisec = to_ms_since_boot(get_absolute_time());
+        }
     }
 }
 
@@ -712,6 +730,31 @@ void updateR2(volatile uint32_t *frequency_ptr)
         return;
     }
 }
+void updateR2Debugging(volatile uint16_t *current_in_micro_amp)
+{
+    uint16_t CPcurrent = *current_in_micro_amp;
+    switch (CPcurrent)
+    {
+    case 1570:
+        R2 = 0x0421000A;
+        break;
+    case 630:
+        R2 = 0x0121000A;
+        break;
+    case 2500:
+        R2 = 0x0721000A;
+        break;
+    case 3750:
+        R2 = 0x0B21000A;
+        break;
+    case 4800:
+        R2 = 0x0F21000A;
+        break;
+    default:
+        R2 = 0x0721000A;
+        break;
+    }
+}
 void sendPLLFreqRegisters(void)
 {
     uint32_t ToSendRegisters[3] = {R3, R1, R0};
@@ -723,7 +766,6 @@ void sendPLLFreqRegisters(void)
         }
         latchFast();
     }
-
 }
 
 void sendPLLAllRegisters(void)
@@ -851,15 +893,16 @@ void frequencyHopOnce()
                 updateR0();
                 updateR1();
                 updateR3(&power_down_pll_flag);
-                if (i == 0 || i == 1 || i == 2 || i == 4)
-                {
-                    sendPLLFreqRegisters();
-                }
-                else
-                {
-                    updateR2(&frequencyToPLL_inHz);
-                    sendPLLAllRegisters();
-                }
+                // if (i == 0 || i == 1 || i == 2 || i == 4)
+                // {
+                //     sendPLLFreqRegisters();
+                // }
+                // else
+                // {
+                //     updateR2(&frequencyToPLL_inHz);
+                //     sendPLLAllRegisters();
+                // }
+                sendPLLFreqRegisters();
                 break;
             }
         }
