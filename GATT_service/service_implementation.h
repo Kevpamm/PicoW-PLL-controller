@@ -295,11 +295,6 @@ static int PLL_service_write_callback(hci_con_handle_t con_handle, uint16_t attr
             {
                 power_down_pll_flag = false;
             }
-            //             CHARGE_PUMP_0630 10,
-            // CHARGE_PUMP_1570,
-            // CHARGE_PUMP_2500,
-            // CHARGE_PUMP_3750,
-            // CHARGE_PUMP_4800,
             else if (ControlCommandReceived == CHARGE_PUMP_0630)
             {
                 changeR2_flag = true;
