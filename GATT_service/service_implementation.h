@@ -26,6 +26,7 @@ extern volatile int32_t delayTime_inMillisec;
 extern volatile uint32_t stepFrequency_inHz;
 extern volatile uint32_t spanFrequency_inHz;
 extern volatile uint32_t stopFrequency_inHz;
+extern volatile uint16_t charge_pump_current;
 
 // Flags between this file and main "PLL_PICOW.c".
 extern volatile bool power_down_pll_flag;
@@ -35,6 +36,7 @@ extern volatile bool restore_default_registers_flag;
 extern volatile bool register_notification_first_on;
 extern volatile bool hop_command_flag;
 extern volatile bool led_flag;
+extern volatile bool changeR2_flag;
 
 extern const uint32_t defaultFrequency;
 
@@ -49,7 +51,12 @@ enum ControlValue
     BLE_DATA_OFF__CONTROL_ENUM,
     FAST_PIN_ON__CONTROL_ENUM,
     FAST_PIN_OFF__CONTROL_ENUM,
-    POWER_ON_PLL
+    POWER_ON_PLL,
+    CHARGE_PUMP_0630,
+    CHARGE_PUMP_1570,
+    CHARGE_PUMP_2500,
+    CHARGE_PUMP_3750,
+    CHARGE_PUMP_4800,
 };
 
 // This struct manages our service
@@ -288,6 +295,31 @@ static int PLL_service_write_callback(hci_con_handle_t con_handle, uint16_t attr
             {
                 power_down_pll_flag = false;
             }
+            else if (ControlCommandReceived == CHARGE_PUMP_0630)
+            {
+                changeR2_flag = true;
+                charge_pump_current = 630;
+            }
+            else if (ControlCommandReceived == CHARGE_PUMP_1570)
+            {
+                changeR2_flag = true;
+                charge_pump_current = 1570;
+            }
+            else if (ControlCommandReceived == CHARGE_PUMP_2500)
+            {
+                changeR2_flag = true;
+                charge_pump_current = 2500;
+            }
+            else if (ControlCommandReceived == CHARGE_PUMP_3750)
+            {
+                changeR2_flag = true;
+                charge_pump_current = 3750;
+            }
+            else if (ControlCommandReceived == CHARGE_PUMP_4800)
+            {
+                changeR2_flag = true;
+                charge_pump_current = 4800;
+            }
             return 0;
         }
     }
@@ -483,7 +515,7 @@ static inline void notify_register_characteristic(void)
 //
 // I'm using this function for 'frequency hopping' feature. I notify the client of the last frequency the VCO hops to,
 // so the client knows and updates the new frequency on their side.
-// 
+//
 // *Note: the client is the laptop.
 static inline void notify_frequency_characteristic(void)
 {

@@ -6,7 +6,7 @@
 <html>
 
 <head>
-    <title>ESP32 PLL Controller</title>
+    <title>PICO-W PLL Controller</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" href="favicon.ico">
     <link rel="stylesheet" type="text/css" href="style.css">
@@ -16,7 +16,7 @@
 <body>
     <div class="topnav">
         <img width="50px" src="W.svg" class="center-image"></img>
-        <h1>ESP32 PLL Controller</h1>
+        <h1>PICO-W PLL Controller</h1>
     </div>
     <div class="content">
         <div class="card-grid">
@@ -45,16 +45,27 @@
 
             <div class="card">
                 <h2>Controls</h2>
-
-                <div id="power-down-div">
-                    <span id="switch-label">PLL Power</span>
-                    <label id="pll-power-switch">
-                        <input id="pll-power-input" class="cb" type="checkbox" disabled />
-                        <span class="toggle">
-                            <span class="left">off</span>
-                            <span class="right">on</span>
-                        </span>
-                    </label>
+                <div class="new-buttons-wrapper">
+                    <div class="new-button-div">
+                        <span class="switch-label">PLL Power</span>
+                        <label class="pll-power-switch">
+                            <input id="pll-power-input" class="cb" type="checkbox" disabled />
+                            <span class="toggle">
+                                <span class="left">off</span>
+                                <span class="right">on</span>
+                            </span>
+                        </label>
+                    </div>
+                    <!-- <div class="new-button-div">
+                        <span class="switch-label">Adjustable CP</span>
+                        <label class="pll-power-switch">
+                            <input id="adj-charge-pump-input" class="cb" type="checkbox" disabled />
+                            <span class="toggle">
+                                <span class="left">off</span>
+                                <span class="right">on</span>
+                            </span>
+                        </label>
+                    </div> -->
                 </div>
                 <button id="allRegButton" class="controlButton">Send All Registers</button>
                 <button id="freqRegButton" class="controlButton">Send Freq Registers</button><br>
@@ -66,6 +77,36 @@
                 <button id="fastPinOffButton" class="controlOffButton">Fast Pins Off</button><br>
                 <button id="LedOnButton" class="controlButton">Test LED: On</button>
                 <button id="LedOffButton" class="controlOffButton">Test LED: Off</button><br><br>
+                <div class="radio-group">
+                    <p id="charge-pump-text">Charge Pump Current</p>
+                    <input type="radio" id="radio1" name="charge-pump-current" class="radio-input" value="10">
+                    <label for="radio1" class="radio-label">
+                        <span class="radio-inner-circle"></span>
+                        0.63mA
+                    </label>
+
+                    <input type="radio" id="radio2" name="charge-pump-current" class="radio-input" value="11">
+                    <label for="radio2" class="radio-label">
+                        <span class="radio-inner-circle"></span>
+                        1.57mA
+                    </label>
+
+                    <input type="radio" id="radio3" name="charge-pump-current" class="radio-input" value="12">
+                    <label for="radio3" class="radio-label">
+                        <span class="radio-inner-circle"></span>
+                        2.5mA (Default)
+                    </label>
+                    <input type="radio" id="radio4" name="charge-pump-current" class="radio-input" value="13">
+                    <label for="radio4" class="radio-label">
+                        <span class="radio-inner-circle"></span>
+                        3.75mA
+                    </label>
+                    <input type="radio" id="radio5" name="charge-pump-current" class="radio-input" value="14">
+                    <label for="radio5" class="radio-label">
+                        <span class="radio-inner-circle"></span>
+                        4.8mA
+                    </label>
+                </div>
 
                 <p class="gray-label2">Last button value sent: <span id="valueSent"></span></p>
             </div>
@@ -144,6 +185,7 @@
     const LedOnButton = document.getElementById('LedOnButton');
     const LedOffButton = document.getElementById('LedOffButton');
     const latestValueSent = document.getElementById('valueSent');
+    const chargePumpRadios = document.querySelectorAll('input[name="charge-pump-current"]');
 
     const delayValue = document.getElementById('delayContainer');
     const delayInput = document.getElementById("freqHopDelayInput");
@@ -232,18 +274,36 @@
         }
 
     });
-    
+    chargePumpRadios.forEach((radio) => {
+        radio.addEventListener('change', () => {
+            if (!radio.checked) {
+                return;
+            }
+
+            if (bleServer && bleServer.connected) {
+                const controlValue = Number(radio.value);
+                console.log("Charge pump current selected. Control value:", controlValue);
+                writeControlCharacteristic(controlValue);
+            }
+            else {
+                console.error("Bluetooth is not connected. Cannot write charge pump current.");
+                window.alert("Bluetooth is not connected. Connect to BLE first!");
+                radio.checked = false;
+            }
+        });
+    });
+
     // Freq Hop Buttons
     enterDelayButton.addEventListener('click', () => sendHopCommand(0, delayInput.value));
     enterStepButton.addEventListener('click', () => sendHopCommand(1, stepInput.value));
     enterSpanButton.addEventListener('click', () => sendHopCommand(2, spanInput.value));
     hopOnButton.addEventListener('click', () => sendHopCommand(3, 0));
     hopOffButton.addEventListener('click', () => sendHopCommand(4, 0));
-    
+
     // Write to the ESP32 LED Characteristic
     LedOnButton.addEventListener('click', () => writeOnCharacteristic(1));
     LedOffButton.addEventListener('click', () => writeOnCharacteristic(0));
-    
+
     // Check if BLE is available in your Browser
     function isWebBluetoothEnabled() {
         if (!navigator.bluetooth) {
@@ -428,7 +488,7 @@
         //  console.log("Characteristic register values changed");
         const dataArray = new Uint8Array(value.buffer);
         var tempContainer = dataArray[0] | (dataArray[1] << 8) | (dataArray[2] << 16) | (dataArray[3] << 24);
-        delayValue.innerHTML = (tempContainer >>> 0) ;
+        delayValue.innerHTML = (tempContainer >>> 0);
 
         tempContainer = dataArray[4] | (dataArray[5] << 8) | (dataArray[6] << 16) | (dataArray[7] << 24);
         stepValue.innerHTML = (tempContainer >>> 0) / 1000000;
