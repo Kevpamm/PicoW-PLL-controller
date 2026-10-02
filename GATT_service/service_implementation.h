@@ -93,6 +93,16 @@ typedef struct
     uint16_t characteristic_LED_value_length;
     char *characteristic_LED_user_description;
 
+    // Setting Characteristic Information - the DC supply power-saving mode
+    uint8_t *characteristic_setting_value;
+    uint16_t characteristic_setting_value_length;
+    char *characteristic_setting_user_description;
+
+    // Resistor Characteristic Information
+    uint8_t *characteristic_resistor_value;
+    uint16_t characteristic_resistor_value_length;
+    char *characteristic_resistor_user_description;
+
     // Frequency Characteristic Handle
     uint16_t characteristic_frequency_handle;
     uint16_t characteristic_frequency_client_configuration_handle;
@@ -107,6 +117,10 @@ typedef struct
     uint16_t characteristic_hop_client_configuration_handle;
     uint16_t characteristic_hop_user_description_handle;
 
+    // Setting Characterisitic Handle
+    uint16_t characteristic_setting_handle;
+    uint16_t characteristic_setting_user_description_handle;
+
     // Register Characteristic Handle
     uint16_t characteristic_register_handle;
     uint16_t characteristic_register_client_configuration_handle;
@@ -116,9 +130,15 @@ typedef struct
     uint16_t characteristic_LED_handle;
     uint16_t characteristic_LED_user_description_handle;
 
+    // Resistor Chacteristic Handle
+    uint16_t characteristic_resistor_handle;
+    uint16_t characteristic_resistor_client_configuration_handle;
+    uint16_t characteristic_resistor_user_description_handle;
+
     btstack_context_callback_registration_t callback_Frequency;
     btstack_context_callback_registration_t callback_Hop;
     btstack_context_callback_registration_t callback_Register;
+    btstack_context_callback_registration_t callback_Resistor;
 } PLL_service_t;
 
 static att_service_handler_t service_handler;
@@ -129,6 +149,8 @@ char characteristic_control[] = "Control";
 char characteristic_hop[] = "Hop Frequency";
 char characteristic_register[] = "Register Value";
 char characteristic_led[] = "LED status";
+char characteristic_setting[] = "DC Supply setting";
+char characteristic_resistor[] = "Digipot code";
 
 // semaphore_t BLUETOOTH_READY; <- this is replaced with flags
 
@@ -162,6 +184,15 @@ static void characteristic_register_callback(void *context)
                       instance->characteristic_register_handle,
                       instance->characteristic_register_value,
                       instance->characteristic_register_value_length);
+}
+
+static void characteristic_resistor_callback(void *context)
+{
+    PLL_service_t *instance = (PLL_service_t *)context;
+    att_server_notify(instance->con_handle,
+                      instance->characteristic_resistor_handle,
+                      instance->characteristic_resistor_value,
+                      instance->characteristic_resistor_value_length);
 }
 
 static uint16_t PLL_service_read_callback(hci_con_handle_t con_handle, uint16_t attribute_handle, uint16_t offset, uint8_t *buffer, uint16_t buffer_size)
@@ -419,7 +450,7 @@ static int PLL_service_write_callback(hci_con_handle_t con_handle, uint16_t attr
 
 // Initialize our PLL service handler:
 
-void PLL_service_server_init(uint8_t *frequency_ptr, uint8_t *control_ptr, uint8_t *hop_ptr, uint8_t *register_ptr, uint8_t *led_ptr)
+void PLL_service_server_init(uint8_t *frequency_ptr, uint8_t *control_ptr, uint8_t *hop_ptr, uint8_t *register_ptr, uint8_t *led_ptr, uint8_t *setting_ptr, uint8_t *resistor_ptr)
 {
     // Pointer to our service_object
     PLL_service_t *instance = &service_object;
@@ -439,11 +470,17 @@ void PLL_service_server_init(uint8_t *frequency_ptr, uint8_t *control_ptr, uint8
     instance->characteristic_LED_value = led_ptr;
     instance->characteristic_LED_value_length = 1;
 
+    instance->characteristic_resistor_value = resistor_ptr;
+    instance->characteristic_resistor_value_length = 1;
+
     instance->characteristic_frequency_user_description = characteristic_frequency;
     instance->characteristic_control_user_description = characteristic_control;
+
     instance->characteristic_hop_user_description = characteristic_hop;
     instance->characteristic_register_user_description = characteristic_register;
+    
     instance->characteristic_LED_user_description = characteristic_led;
+    instance->characteristic_register_user_description = characteristic_resistor;
 
     // Assigned handle values
     instance->characteristic_frequency_handle = ATT_CHARACTERISTIC_50e12001_a21d_4471_b2f0_412147c8399e_01_VALUE_HANDLE;
@@ -459,11 +496,17 @@ void PLL_service_server_init(uint8_t *frequency_ptr, uint8_t *control_ptr, uint8
     instance->characteristic_register_handle = ATT_CHARACTERISTIC_50e12004_a21d_4471_b2f0_412147c8399e_01_VALUE_HANDLE;
     instance->characteristic_register_client_configuration_handle = ATT_CHARACTERISTIC_50e12004_a21d_4471_b2f0_412147c8399e_01_CLIENT_CONFIGURATION_HANDLE;
     instance->characteristic_register_user_description_handle = ATT_CHARACTERISTIC_50e12004_a21d_4471_b2f0_412147c8399e_01_USER_DESCRIPTION_HANDLE;
+
     instance->characteristic_LED_handle = ATT_CHARACTERISTIC_50e12010_a21d_4471_b2f0_412147c8399e_01_VALUE_HANDLE;
     instance->characteristic_LED_user_description_handle = ATT_CHARACTERISTIC_50e12010_a21d_4471_b2f0_412147c8399e_01_USER_DESCRIPTION_HANDLE;
 
-    // #define ATT_SERVICE_50e12000_a21d_4471_b2f0_412147c8399e_START_HANDLE 0x0007
-    //  #define ATT_SERVICE_50e12000_a21d_4471_b2f0_412147c8399e_END_HANDLE 0x0019
+    instance->characteristic_setting_handle = ATT_CHARACTERISTIC_f8a93cd2_fdda_43d7_b6f3_d5050e7173a2_01_VALUE_HANDLE;
+    instance->characteristic_setting_user_description_handle = ATT_CHARACTERISTIC_f8a93cd2_fdda_43d7_b6f3_d5050e7173a2_01_USER_DESCRIPTION_HANDLE;
+
+    instance->characteristic_resistor_handle = ATT_CHARACTERISTIC_a6bce7c3_2fc7_40c3_88a8_5032d63f353a_01_VALUE_HANDLE;
+    instance->characteristic_resistor_client_configuration_handle = ATT_CHARACTERISTIC_a6bce7c3_2fc7_40c3_88a8_5032d63f353a_01_CLIENT_CONFIGURATION_HANDLE;
+    instance->characteristic_register_user_description_handle = ATT_CHARACTERISTIC_a6bce7c3_2fc7_40c3_88a8_5032d63f353a_01_USER_DESCRIPTION_HANDLE;
+
     service_handler.start_handle = ATT_SERVICE_50e12000_a21d_4471_b2f0_412147c8399e_START_HANDLE;
     service_handler.end_handle = ATT_SERVICE_50e12000_a21d_4471_b2f0_412147c8399e_END_HANDLE;
 

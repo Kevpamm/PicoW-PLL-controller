@@ -311,6 +311,8 @@ static uint8_t characteristic_CONTROL_tx[BUFFER_SIZE];
 static uint8_t characteristic_HOP_tx[BUFFER_SIZE];
 static uint8_t characteristic_REGISTER_tx[BUFFER_SIZE];
 static uint8_t characteristic_LED_tx[BUFFER_SIZE];
+static uint8_t characteristic_SETTING_tx[BUFFER_SIZE];
+static uint8_t characteristic_RESISTOR_tx[BUFFER_SIZE];
 
 bool freqHop_timer_callback(struct repeating_timer *t)
 {
@@ -375,9 +377,13 @@ int main()
     att_server_init(profile_data, NULL, NULL);
 
     // Instantiate our PLL Service Handler
-    PLL_service_server_init(characteristic_FREQUENCY_tx, characteristic_CONTROL_tx,
-                            characteristic_HOP_tx, characteristic_REGISTER_tx,
-                            characteristic_LED_tx);
+    PLL_service_server_init(characteristic_FREQUENCY_tx, 
+                            characteristic_CONTROL_tx,
+                            characteristic_HOP_tx, 
+                            characteristic_REGISTER_tx,
+                            characteristic_LED_tx,
+                            characteristic_SETTING_tx,
+                            characteristic_RESISTOR_tx);
 
     hci_event_callback_registration.callback = &packet_handler;
     hci_add_event_handler(&hci_event_callback_registration);
