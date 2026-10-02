@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "hardware/i2c.h"   // **IMPORTANT. NEED TO HAVE
+#include "hardware/i2c.h"
 
 #ifdef CYW43_WL_GPIO_LED_PIN
 #include "pico/cyw43_arch.h"
@@ -83,12 +83,10 @@ uint32_t R7 = 0x7;
 #define BORN_PIN2 11
 #define BORN_PIN3 12
 
-
-// Khang Added here
 #define I2C_PORT       i2c0
 #define I2C_SDA_PIN    4
 #define I2C_SCL_PIN    5
-#define I2C_BAUDRATE   100000
+#define I2C_BAUDRATE   400000
 
 // ADVERTISEMENT FLAGS
 #define APP_AD_FLAGS 0x06 // This flag is for General Discoverable in advertising data, meaning everyone can discover our device and advertising_data
@@ -156,7 +154,7 @@ void sendPLLAllRegisters(void);
 void restoreAllValues();
 void frequencyHopOnce();
 void i2c_setup(void);
-bool i2c_write_register(uint8_t * handler);
+bool i2c_write_register(uint8_t * handler, bool nostop_or_not);
 
 const uint32_t defaultFrequency_inHz = 920000000; //920 MHz
 /*********************************************************************************************************************************
@@ -791,29 +789,34 @@ void i2c_setup(void)
     gpio_set_function(I2C_SDA_PIN, GPIO_FUNC_I2C);
     gpio_set_function(I2C_SCL_PIN, GPIO_FUNC_I2C);
 
-    // Enable internal pull-ups. Still need extenral pull up.
-    // Gneric setup for I2C
+    // Enable internal pull-ups. Still need external pull up.
+    // Generic setup for I2C
     gpio_pull_up(I2C_SDA_PIN);
     gpio_pull_up(I2C_SCL_PIN);
 }
 
-bool i2c_write_register(uint8_t * handler)
+bool i2c_write_register(uint8_t * handler, bool nostop_or_not)
 {
     // Send one byte to a specified IC register.
-// Returns true if both bytes were acknowledged.
+    // Returns true if both bytes were acknowledged.
+/*
+A 3-byte packet that the UI will send to pico looks like:
+
+[slave addr]   [register addr]     [data]
+ 1010 0000        0000 0001        1000 0000
+
+*/
     uint8_t buffer[2];
-
-    buffer[0] = (*handler>>2) && 0xFF;  // Register address
-    buffer[1] =  *handler && 0xFF;      // Data to store
-
-    uint8_t device_address = *handler >> 4;
+    uint8_t device_address = handler[0];
+    buffer[0] = handler[1];  // Register address
+    buffer[1] =  handler[2]; // Data to store
 
     int bytes_written = i2c_write_blocking(
         I2C_PORT,
         device_address,
         buffer,
         sizeof(buffer),
-        false
+        nostop_or_not
     );
 
     return bytes_written == sizeof(buffer);
