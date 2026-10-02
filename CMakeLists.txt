@@ -67,6 +67,7 @@ target_link_libraries(PLL_BLE
     hardware_adc
     hardware_base
     pico_bootrom
+    hardware_i2c
 )
 
 pico_add_extra_outputs(PLL_BLE)
