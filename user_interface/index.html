@@ -178,7 +178,7 @@
         <section id="dc-supply-page" class="page-section hidden ">
             <!-- <header>
                 <span>DC Supply Control</span>
-            </header> -->   
+            </header> -->
             <div class="dc-supply-control-div">
                 <div class="main-settings-div">
                     <button id="back-to-default-btn">
@@ -220,20 +220,30 @@
                     </div>
 
                     <div class="ldos-div">
-                        <div class="ldo-div" id="pin-2-div">
+                        <div class="ldo-div" id="pin-3-div">
                             <span>Pin 3</span>
                             <div class="voltage-display-div">
-                                <span class="voltage-reading" id="pin-2-reading">2.60 </span>
+                                <span class="voltage-reading" id="pin-3-reading">2.60 </span>
                                 <span class="voltage-unit">V</span>
                             </div>
                             <div class="increase-decrease-div">
-                                <button class="decrease-btn" id="decrease-pin2">
+                                <button class="decrease-btn" id="decrease-pin3">
                                     <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
                                         width="24px" fill="#e3e3e3">
                                         <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z" />
                                     </svg>
                                 </button>
-                                <button class="increase-btn" id="increase-pin2">
+                                <label class="switch">
+                                    <input id="toggle-pin-3" type="checkbox" checked="checked">
+                                    <div class="button">
+                                        <div class="light"></div>
+                                        <div class="dots"></div>
+                                        <div class="characters"></div>
+                                        <div class="shine"></div>
+                                        <div class="shadow"></div>
+                                    </div>
+                                </label>
+                                <button class="increase-btn" id="increase-pin3">
                                     <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
                                         width="24px" fill="#e3e3e3">
                                         <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z" />
@@ -241,20 +251,30 @@
                                 </button>
                             </div>
                         </div>
-                        <div class="ldo-div" id="pin-4-div">
+                        <div class="ldo-div" id="pin-12-div">
                             <span>Pin 12</span>
                             <div class="voltage-display-div">
-                                <span class="voltage-reading" id="pin-4-reading">2.00 </span>
+                                <span class="voltage-reading" id="pin-12-reading">2.00 </span>
                                 <span class="voltage-unit">V</span>
                             </div>
                             <div class="increase-decrease-div">
-                                <button class="decrease-btn" id="decrease-pin4">
+                                <button class="decrease-btn" id="decrease-pin12">
                                     <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
                                         width="24px" fill="#e3e3e3">
                                         <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z" />
                                     </svg>
                                 </button>
-                                <button class="increase-btn" id="increase-pin4">
+                                <label class="switch">
+                                    <input id="toggle-pin-12" type="checkbox" checked="checked">
+                                    <div class="button">
+                                        <div class="light"></div>
+                                        <div class="dots"></div>
+                                        <div class="characters"></div>
+                                        <div class="shine"></div>
+                                        <div class="shadow"></div>
+                                    </div>
+                                </label>
+                                <button class="increase-btn" id="increase-pin12">
                                     <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
                                         width="24px" fill="#e3e3e3">
                                         <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z" />
@@ -291,6 +311,8 @@
     const pllPage = document.getElementById("pll-page");
     const dcSupplyPage = document.getElementById("dc-supply-page");
 
+    const togglePin3 = document.getElementById("toggle-pin-3");
+    const togglePin12 = document.getElementById("toggle-pin-12");
     settingsMenuButton.addEventListener("click", () => {
         settingsDropdown.classList.toggle("hidden");
         settingsMenuButton.classList.toggle("menu-active");
@@ -348,7 +370,7 @@
     const enterSpanButton = document.getElementById("enterHopSpanButton");
     const hopOnButton = document.getElementById('freqHopOnButton');
     const hopOffButton = document.getElementById('freqHopOffButton');
-    
+
     const intValue = document.getElementById('intContainer');
     const fracValue = document.getElementById('fracContainer');
     const r0Value = document.getElementById('r0Container');
@@ -362,24 +384,24 @@
     const r61Value = document.getElementById('r61Container');
     const r62Value = document.getElementById('r62Container');
     const r7Value = document.getElementById('r7Container');
-    
+
     // DC Supply button
     const backToDefaultButton = document.getElementById("back-to-default-btn");
     const powerSavingButton = document.getElementById("power-saving-btn");
 
     const pin1VoltageDisplay = document.getElementById("pin-1-reading");
-    const pin2VoltageDisplay = document.getElementById("pin-2-reading");
-    const pin4VoltageDisplay = document.getElementById("pin-4-reading");
+    const pin3VoltageDisplay = document.getElementById("pin-3-reading");
+    const pin12VoltageDisplay = document.getElementById("pin-12-reading");
 
     const decreasePin1Button = document.getElementById("decrease-pin1");
     const increasePin1Button = document.getElementById("increase-pin1");
 
-    const decreasePin2Button = document.getElementById("decrease-pin2");
-    const increasePin2Button = document.getElementById("increase-pin2");
+    const decreasePin3Button = document.getElementById("decrease-pin3");
+    const increasePin3Button = document.getElementById("increase-pin3");
 
-    const decreasePin4Button = document.getElementById("decrease-pin4");
-    const increasePin4Button = document.getElementById("increase-pin4");
-    
+    const decreasePin12Button = document.getElementById("decrease-pin12");
+    const increasePin12Button = document.getElementById("increase-pin12");
+
     //Define BLE Device Specs
     var deviceName = 'PLL-PICO';
     var bleService = '50e12000-a21d-4471-b2f0-412147c8399e';
@@ -390,6 +412,8 @@
     var ledCharacteristic = '50e12010-a21d-4471-b2f0-412147c8399e';
     var resistorCharacteristic = 'a6bce7c3-2fc7-40c3-88a8-5032d63f353a';
     var settingCharacteristic = 'f8a93cd2-fdda-43d7-b6f3-d5050e7173a2';
+    var enableCharacteristic = 'c82bdf01-4408-4bb1-9b42-461bbaf57d07';
+
     //Global Variables to Handle Bluetooth
     var bleServer;
     var bleServiceFound;
@@ -397,34 +421,44 @@
 
     var frequencyMHz;
     var delayms;
-    
+
 
     // DC Supply constants and variables
     const CODE_MIN = 1;
     const CODE_MAX = 255;
+    const PIN3_DISABLE = 0;
+    const PIN12_DISABLE = 1;
+    const PIN3_ENABLE = 10;
+    const PIN12_ENABLE = 11;
 
+    const power_saving_buck_converter_code = 55; //0x37 in digipot_config.c
+    const power_saving_buck_converter_voltage = 2.80
     const default_buck_converter_code = 40;
-    const default_pin2_code = 120;
-    const default_pin4_code = 156;
+    const default_pin3_code = 120;
+    const power_saving_pin3_code = 215; //0xD7
+    const power_saving_pin3_voltage = 1.45;
+    const power_saving_pin12_code = 240; //0xF0
+    const power_saving_pin12_voltage = 1.30;
+    const default_pin12_code = 156;
 
     let buck_converter_voltage = 3.80;
     let buck_converter_code = default_buck_converter_code;
 
-    let pin_2_voltage = 2.60;
-    let pin_2_code = default_pin2_code;
+    let pin_3_voltage = 2.60;
+    let pin_3_code = default_pin3_code;
 
-    let pin_4_voltage = 2.00;
-    let pin_4_code = default_pin4_code;
-    
+    let pin_12_voltage = 2.00;
+    let pin_12_code = default_pin12_code;
+
     // DC supply functions
     const clamp = (value, min, max) => {
         return Math.min(Math.max(value, min), max);
     }
-    
+
     const updateVoltageDisplays = () => {
         pin1VoltageDisplay.innerHTML = buck_converter_voltage.toFixed(2);
-        pin2VoltageDisplay.innerHTML = pin_2_voltage.toFixed(2);
-        pin4VoltageDisplay.innerHTML = pin_4_voltage.toFixed(2);
+        pin3VoltageDisplay.innerHTML = pin_3_voltage.toFixed(2);
+        pin12VoltageDisplay.innerHTML = pin_12_voltage.toFixed(2);
     }
     const calculateNextStep = (pinNumber, direction) => {
         const codeStep = direction === "increase" ? -1 : +1;
@@ -432,36 +466,36 @@
         if (pinNumber === 1) {
             buck_converter_code = clamp(buck_converter_code + codeStep, CODE_MIN, CODE_MAX);
             ratio = (1 - (buck_converter_code / 256)) / (buck_converter_code / 256);
-            buck_converter_voltage = clamp(0.6 * (1 + ratio), 3.30, 4.50);
+            buck_converter_voltage = 0.6 * (1 + ratio);
         }
-        else if (pinNumber === 2) {
-            pin_2_code = clamp(pin_2_code + codeStep, CODE_MIN, CODE_MAX);
-            ratio = (1 - (pin_2_code / 256)) / (pin_2_code / 256);
-            pin_2_voltage = clamp(1.22 * (1 + ratio), 1.30, 3.00);
+        else if (pinNumber === 3) {
+            pin_3_code = clamp(pin_3_code + codeStep, CODE_MIN, CODE_MAX);
+            ratio = (1 - (pin_3_code / 256)) / (pin_3_code / 256);
+            pin_3_voltage = 1.22 * (1 + ratio);
         }
-        else if (pinNumber === 4) {
-            pin_4_code = clamp(pin_4_code + codeStep, CODE_MIN, CODE_MAX);
-            ratio = (1 - (pin_4_code / 256)) / (pin_4_code / 256);
-            pin_4_voltage = clamp(1.22 * (1 + ratio), 1.30, 3.00);
+        else if (pinNumber === 12) {
+            pin_12_code = clamp(pin_12_code + codeStep, CODE_MIN, CODE_MAX);
+            ratio = (1 - (pin_12_code / 256)) / (pin_12_code / 256);
+            pin_12_voltage = 1.22 * (1 + ratio);
         }
         updateVoltageDisplays();
     }
-    
+
     const digipotConfig = {
         // Pin 1 or buck converter = 3.8V default
         1: {
             slaveAddr: 0x50,
             registerAddr: 0x00
         },
-        
-        // Pin 2 = 2.6V default
-        2: {
+
+        // Pin 3 = 2.6V default
+        3: {
             slaveAddr: 0x50,
             registerAddr: 0x01
         },
-        
-        // Pin 4 = 2.0V default
-        4: {
+
+        // Pin 12 = 2.0V default
+        12: {
             slaveAddr: 0x51,
             registerAddr: 0x00
         }
@@ -469,179 +503,283 @@
     const sendDigipotCode = (pinNumber, code) => {
         if (bleServer && bleServer.connected) {
             bleServiceFound.getCharacteristic(resistorCharacteristic)
-            .then(characteristic => {
-                console.log("Found the resistor characteristic: ", characteristic.uuid);
-                
-                const data = packageDigipotData(pinNumber, code);
-                
-                if (!data) {
-                    return null;
-                }
-                console.log("Value in data container:", data[2], data[1], data[0]);
+                .then(characteristic => {
+                    console.log("Found the resistor characteristic: ", characteristic.uuid);
+
+                    const data = packageDigipotData(pinNumber, code);
+
+                    if (!data) {
+                        return null;
+                    }
+                    console.log("Value in data container:", data[3], data[2], data[1], data[0]);
                     return characteristic.writeValue(data);
                 })
                 .catch(error => {
                     console.error("Error writing to the resistor characteristic: ", error);
                 });
-            } else {
-                console.error("Bluetooth is not connected. Cannot write to characteristic.")
-                window.alert("Bluetooth is not connected. Cannot write to characteristic. \n Connect to BLE first!")
-            }
+        } else {
+            console.error("Bluetooth is not connected. Cannot write to characteristic.")
+            window.alert("Bluetooth is not connected. Cannot write to characteristic. \n Connect to BLE first!")
         }
-        const packageDigipotData = (pinNumber, code) => {
-            const address = digipotConfig[pinNumber];
-            
-            if (!address) {
-                console.error("Invalid pin number", pinNumber);
-                return null;
-            }
-            return new Uint8Array([address.slaveAddr, address.registerAddr, code]);
+    }
+    const sendRollbackRegister = (...pins) => {
+        if (bleServer && bleServer.connected) {
+            bleServiceFound.getCharacteristic(settingCharacteristic)
+                .then(characteristic => {
+                    console.log("Found the setting characteristic: ", characteristic.uuid);
+                    const data = new Uint8Array([pins]);
+                    return characteristic.writeValue(data);
+                })
+                .then(() => {
+                    // latestValueSent.innerHTML = value;
+                    console.log("Value written to setting characteristic:", data);
+                })
+                .catch(error => {
+                    console.error("Error writing to the setting characteristic: ", error);
+                });
+        } else {
+            console.error("Bluetooth is not connected. Cannot write to characteristic.")
+            window.alert("Bluetooth is not connected. Cannot write to characteristic. \n Connect to BLE first!")
         }
-        // End of DC supply functions
+    }
+    const writeSettingCharacteristic = (value) => {
+        if (bleServer && bleServer.connected) {
+            bleServiceFound.getCharacteristic(settingCharacteristic)
+                .then(characteristic => {
+                    console.log("Found the setting characteristic: ", characteristic.uuid);
+                    const data = new Uint8Array([value]);
+                    return characteristic.writeValue(data);
+                })
+                .then(() => {
+                    // latestValueSent.innerHTML = value;
+                    console.log("Value written to setting characteristic:", value);
+                })
+                .catch(error => {
+                    console.error("Error writing to the setting characteristic: ", error);
+                });
+        } else {
+            console.error("Bluetooth is not connected. Cannot write to characteristic.")
+            window.alert("Bluetooth is not connected. Cannot write to characteristic. \n Connect to BLE first!")
+        }
+    }
+    const packageDigipotData = (pinNumber, code) => {
+        const address = digipotConfig[pinNumber];
+
+        if (!address) {
+            console.error("Invalid pin number", pinNumber);
+            return null;
+        }
+        return new Uint8Array([pinNumber, address.slaveAddr, address.registerAddr, code]);
+    }
+    // End of DC supply functions
 
     const frequency = [[920, 949], [970, 996], [1074, 1106], [1209, 1266], [1270, 1323], [1442, 1514], [1695, 1811], [2142, 2401]];
-    
-        // Connect Button (search for BLE Devices only if BLE is available)
-        connectButton.addEventListener('click', (event) => {
-            if (isWebBluetoothEnabled()) {
-                connectToDevice();
-            }
-        });
-        
-        // Disconnect Button
-        disconnectButton.addEventListener('click', disconnectDevice);
-        
-        // Enter Frequency Button
-        enterFreqButton.addEventListener("click", () => sendFrequency(frequencyInput.value));
-        
-        // Control Buttons
-        allRegButton.addEventListener('click', () => writeControlCharacteristic(1));
-        freqRegButton.addEventListener('click', () => writeControlCharacteristic(2));
-        defaultsButton.addEventListener('click', () => writeControlCharacteristic(3));
-        resetButton.addEventListener('click', () => writeControlCharacteristic(4));
-        bleDataOnButton.addEventListener('click', () => writeControlCharacteristic(5));
-        bleDataOffButton.addEventListener('click', () => writeControlCharacteristic(6));
-        fastPinOnButton.addEventListener('click', () => writeControlCharacteristic(7));
-        fastPinOffButton.addEventListener('click', () => writeControlCharacteristic(8));
-        pllPowerSwitch.addEventListener('change', () => {
-            
-            if (bleServer && bleServer.connected) {
-                
-                if (pllPowerSwitch.checked) {
-                    console.log("PLL Power ON");
-                    writeControlCharacteristic(9);
-                }
-                else {
-                    console.log("PLL Power OFF");
-                    writeControlCharacteristic(0);
-                }
-                
+
+    // Connect Button (search for BLE Devices only if BLE is available)
+    connectButton.addEventListener('click', (event) => {
+        if (isWebBluetoothEnabled()) {
+            connectToDevice();
+        }
+    });
+
+    // Disconnect Button
+    disconnectButton.addEventListener('click', disconnectDevice);
+
+    // Enter Frequency Button
+    enterFreqButton.addEventListener("click", () => sendFrequency(frequencyInput.value));
+
+    // Control Buttons
+    allRegButton.addEventListener('click', () => writeControlCharacteristic(1));
+    freqRegButton.addEventListener('click', () => writeControlCharacteristic(2));
+    defaultsButton.addEventListener('click', () => writeControlCharacteristic(3));
+    resetButton.addEventListener('click', () => writeControlCharacteristic(4));
+    bleDataOnButton.addEventListener('click', () => writeControlCharacteristic(5));
+    bleDataOffButton.addEventListener('click', () => writeControlCharacteristic(6));
+    fastPinOnButton.addEventListener('click', () => writeControlCharacteristic(7));
+    fastPinOffButton.addEventListener('click', () => writeControlCharacteristic(8));
+    pllPowerSwitch.addEventListener('change', () => {
+
+        if (bleServer && bleServer.connected) {
+
+            if (pllPowerSwitch.checked) {
+                console.log("PLL Power ON");
+                writeControlCharacteristic(9);
             }
             else {
-                pllPowerSwitch.checked = false;
+                console.log("PLL Power OFF");
+                writeControlCharacteristic(0);
             }
-            
-        });
-        chargePumpRadios.forEach((radio) => {
-            radio.addEventListener('change', () => {
-                if (!radio.checked) {
-                    return;
-                }
-                
-                if (bleServer && bleServer.connected) {
-                    const controlValue = Number(radio.value);
-                    console.log("Charge pump current selected. Control value:", controlValue);
-                    writeControlCharacteristic(controlValue);
-                }
-                else {
-                    console.error("Bluetooth is not connected. Cannot write charge pump current.");
-                    window.alert("Bluetooth is not connected. Connect to BLE first!");
-                    radio.checked = false;
-                }
-            });
-        });
-        
-        // Freq Hop Buttons
-        enterDelayButton.addEventListener('click', () => sendHopCommand(0, delayInput.value));
-        enterStepButton.addEventListener('click', () => sendHopCommand(1, stepInput.value));
-        enterSpanButton.addEventListener('click', () => sendHopCommand(2, spanInput.value));
-        hopOnButton.addEventListener('click', () => sendHopCommand(3, 0));
-        hopOffButton.addEventListener('click', () => sendHopCommand(4, 0));
-        
-        // Write to the ESP32 LED Characteristic
-        LedOnButton.addEventListener('click', () => writeOnCharacteristic(1));
-        LedOffButton.addEventListener('click', () => writeOnCharacteristic(0));
-        
-        // DC Supply characteristics
 
-        // Write to Setting Characteristic - Write 0 to command reset DC supply, 1 to command power saving mode
-        // The pico receives 0 / 1 and handles the logic
-        backToDefaultButton.addEventListener("click", () => {
-            writeSettingCharacteristic(0);
+        }
+        else {
+            pllPowerSwitch.checked = false;
+        }
+
+    });
+    chargePumpRadios.forEach((radio) => {
+        radio.addEventListener('change', () => {
+            if (!radio.checked) {
+                return;
+            }
+
+            if (bleServer && bleServer.connected) {
+                const controlValue = Number(radio.value);
+                console.log("Charge pump current selected. Control value:", controlValue);
+                writeControlCharacteristic(controlValue);
+            }
+            else {
+                console.error("Bluetooth is not connected. Cannot write charge pump current.");
+                window.alert("Bluetooth is not connected. Connect to BLE first!");
+                radio.checked = false;
+            }
+        });
+    });
+
+    // Freq Hop Buttons
+    enterDelayButton.addEventListener('click', () => sendHopCommand(0, delayInput.value));
+    enterStepButton.addEventListener('click', () => sendHopCommand(1, stepInput.value));
+    enterSpanButton.addEventListener('click', () => sendHopCommand(2, spanInput.value));
+    hopOnButton.addEventListener('click', () => sendHopCommand(3, 0));
+    hopOffButton.addEventListener('click', () => sendHopCommand(4, 0));
+
+    // Write to the ESP32 LED Characteristic
+    LedOnButton.addEventListener('click', () => writeOnCharacteristic(1));
+    LedOffButton.addEventListener('click', () => writeOnCharacteristic(0));
+
+    // DC Supply characteristics
+
+    // Write to Setting Characteristic - Write 0 to command reset DC supply, 1 to command power saving mode
+    // The pico receives 0 / 1 and handles the logic
+    backToDefaultButton.addEventListener("click", () => {
+        writeSettingCharacteristic(0);
+        buck_converter_voltage = 3.80;
+        buck_converter_code = default_buck_converter_code;
+        pin_3_voltage = 2.60;
+        pin_3_code = default_pin3_code;
+        pin_12_voltage = 2.00;
+        pin_12_code = default_pin12_code;
+        updateVoltageDisplays();
+    });
+    // const power_saving_buck_converter_code = 55; //0x37 in digipot_config.c
+    // const power_saving_buck_converter_voltage = 2.80
+    // const default_buck_converter_code = 40;
+    // const default_pin3_code = 120;
+    // const power_saving_pin3_code = 215;
+    // const power_saving_pin3_voltage = 1.45;
+    // const power_saving_pin12_code = 240;
+    // const power_saving_pin12_voltage = 1.30;
+    // const default_pin12_code = 156;
+    powerSavingButton.addEventListener("change", () => {
+        // let temp_pin_3_code = pin_3_code;
+        // let temp_pin_12_code = pin_12_code;
+        // let temp_buck_converter_code = buck_converter_code;
+
+        // let temp_pin_3_voltage = pin_3_voltage;
+        // let temp_pin_12_voltage = pin_12_voltage;
+        // let temp_buck_converter_voltage = buck_converter_voltage;
+        if (powerSavingButton.checked) {
+            writeSettingCharacteristic(1);
+
+            buck_converter_code = power_saving_buck_converter_code;
+            buck_converter_voltage = power_saving_buck_converter_voltage;
+            pin_3_code = power_saving_pin3_code;
+            pin_3_voltage = power_saving_pin3_voltage;
+            pin_12_code = power_saving_pin12_code;
+            pin_12_voltage = power_saving_pin12_voltage;
+            updateVoltageDisplays();
+        } else {
+            // buck_converter_code = temp_buck_converter_code;
+            // buck_converter_voltage = temp_buck_converter_code;
+            // pin_3_code = temp_pin_3_code;
+            // pin_3_voltage = temp_pin_3_voltage;
+            // pin_12_code = temp_pin_12_code;
+            // pin_12_voltage = temp_pin_12_voltage;
+            // updateVoltageDisplays();
+            // sendRollbackRegister(pin_3_code, pin_12_code, buck_converter_code)
             buck_converter_voltage = 3.80;
             buck_converter_code = default_buck_converter_code;
-            pin_2_voltage = 2.60;
-            pin_2_code = default_pin2_code;
-            pin_4_voltage = 2.00;
-            pin_4_code = default_pin4_code;
+            pin_3_voltage = 2.60;
+            pin_3_code = default_pin3_code;
+            pin_12_voltage = 2.00;
+            pin_12_code = default_pin12_code;
+            writeSettingCharacteristic(0);
             updateVoltageDisplays();
-        });
-        
-        powerSavingButton.addEventListener("click", () => {
-            writeSettingCharacteristic(1);
-        })
-
-        // Write to Resistor Characteristic - the written packet contains: Slave Addr, Register Addr, and Digipot Code.
-        increasePin1Button.addEventListener("click", () => {
-            calculateNextStep(1, "increase");
-            sendDigipotCode(1, buck_converter_code);
-        });
-        
-        decreasePin1Button.addEventListener("click", () => {
-            calculateNextStep(1, "decrease");
-            sendDigipotCode(1, buck_converter_code);
-            
-        });
-        
-        increasePin2Button.addEventListener("click", () => {
-            calculateNextStep(2, "increase");
-            sendDigipotCode(2, pin_2_code);
-            
-        });
-        
-        decreasePin2Button.addEventListener("click", () => {
-            calculateNextStep(2, "decrease");
-            sendDigipotCode(2, pin_2_code);
-            
-        });
-        
-        increasePin4Button.addEventListener("click", () => {
-            calculateNextStep(4, "increase");
-            sendDigipotCode(4, pin_4_code);
-            
-        });
-        
-        decreasePin4Button.addEventListener("click", () => {
-            calculateNextStep(4, "decrease");
-            sendDigipotCode(4, pin_4_code);
-            
-        });
-        
-        // Check if BLE is available in your Browser
-        function isWebBluetoothEnabled() {
-            if (!navigator.bluetooth) {
-                console.log('Web Bluetooth API is not available in this browser!');
-                bleStateContainer.innerHTML = "Web Bluetooth API is not available in this browser/device!";
-                return false
-            }
-            console.log('Web Bluetooth API supported in this browser.');
-            return true
         }
+    });
+
+    // Write to Resistor Characteristic - the written packet contains: Slave Addr, Register Addr, and Digipot Code.
+    increasePin1Button.addEventListener("click", () => {
+        calculateNextStep(1, "increase");
+        sendDigipotCode(1, buck_converter_code);
+    });
+
+    decreasePin1Button.addEventListener("click", () => {
+        calculateNextStep(1, "decrease");
+        sendDigipotCode(1, buck_converter_code);
+
+    });
+
+    increasePin3Button.addEventListener("click", () => {
+        calculateNextStep(3, "increase");
+        sendDigipotCode(3, pin_3_code);
+
+    });
+
+    decreasePin3Button.addEventListener("click", () => {
+        calculateNextStep(3, "decrease");
+        sendDigipotCode(3, pin_3_code);
+
+    });
+
+    increasePin12Button.addEventListener("click", () => {
+        calculateNextStep(12, "increase");
+        sendDigipotCode(12, pin_12_code);
+
+    });
+
+    decreasePin12Button.addEventListener("click", () => {
+        calculateNextStep(12, "decrease");
+        sendDigipotCode(12, pin_12_code);
+
+    });
+
+    togglePin3.addEventListener("change", () => {
+
+        const command = togglePin3.checked
+            ? PIN3_ENABLE
+            : PIN3_DISABLE;
+
+        writeEnableCharacteristic(command)
+            // .catch(() => {
+            //     // Undo UI change if BLE write failed
+            //     togglePin3.checked = !togglePin3.checked;
+            // });
+    });
+
+
+    togglePin12.addEventListener("change", () => {
+        const command = togglePin12.checked ? PIN12_ENABLE : PIN12_DISABLE;
         
-        // Connect to BLE Device and Enable Notifications
-        function connectToDevice() {
-            console.log('Initializing Bluetooth...');
-            navigator.bluetooth.requestDevice({
+        writeEnableCharacteristic(command).catch(() => {
+            togglePin12.checked = !togglePin12.checked;
+        });
+    });
+
+    // Check if BLE is available in your Browser
+    function isWebBluetoothEnabled() {
+        if (!navigator.bluetooth) {
+            console.log('Web Bluetooth API is not available in this browser!');
+            bleStateContainer.innerHTML = "Web Bluetooth API is not available in this browser/device!";
+            return false
+        }
+        console.log('Web Bluetooth API supported in this browser.');
+        return true
+    }
+
+    // Connect to BLE Device and Enable Notifications
+    function connectToDevice() {
+        console.log('Initializing Bluetooth...');
+        navigator.bluetooth.requestDevice({
             filters: [{ name: deviceName }],
             optionalServices: [bleService]
         })
@@ -675,7 +813,7 @@
             .then(value => {
                 console.log("Read value: ", value);
                 console.log("Value byte length: ", value.byteLength);
-                
+
                 if (value.byteLength < 4) {
                     console.log("Frequency value is too short. Expected 4 bytes.");
                     return;
@@ -686,7 +824,7 @@
                 frequencyMHz = decodedValue / 1000000;
                 freqValue.innerHTML = frequencyMHz;
             })
-            
+
             .then(() => {
                 return bleServiceFound.getCharacteristic(hopCharacteristic);
             })
@@ -698,11 +836,11 @@
                 console.log("Freq Hop Notifications Started.");
                 //return characteristic.readValue();
             })
-            
+
             .then(() => {
                 return bleServiceFound.getCharacteristic(registerCharacteristic);
             })
-            
+
             .then(characteristic => {
                 console.log("Characteristic discovered:", characteristic.uuid);
                 registerCharacteristicFound = characteristic;
@@ -711,12 +849,12 @@
                 console.log("Reg Notifications Started.");
                 //return characteristic.readValue();
             })
-            
+
             .catch(error => {
                 console.log('Error: ', error);
             })
     }
-    
+
     function onDisconnected(event) {
         console.log('Device Disconnected:', event.target.device.name);
         bleStateContainer.innerHTML = "Device disconnected";
@@ -728,16 +866,16 @@
 
     function handleFreqCharacteristicChange(event) {
         // const newValueReceived = new TextDecoder().decode(event.target.value);
-        
+
         const newValueReceived = event.target.value.getUint32(0, true);
         console.log("Characteristic freq value changed: ", newValueReceived);
-        
+
         frequencyMHz = newValueReceived / 1000000;
         freqValue.innerHTML = frequencyMHz;
         timestampContainer.innerHTML = getDateTime();
     }
-    
-    
+
+
     function handleRegisterCharacteristicChange(event) {
         const value = event.target.value;
         //  console.log("Characteristic register values changed");
@@ -745,66 +883,66 @@
         var tempContainer = dataArray[0] | (dataArray[1] << 8) | (dataArray[2] << 16) | (dataArray[3] << 24);
         intValue.innerHTML = (tempContainer >>> 0);
         console.log("intValue: ", tempContainer >>> 0);
-        
+
         tempContainer = dataArray[4] | (dataArray[5] << 8) | (dataArray[6] << 16) | (dataArray[7] << 24);
         fracValue.innerHTML = (tempContainer >>> 0);
         console.log("fracValue", tempContainer >>> 0);
-        
+
         // additional data looped to display as hex values
         const valueOffsets = [8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48]; // Start indexes for each chunk of 4 bytes
         for (let i = 0; i < valueOffsets.length; i++) {
             const startIndex = valueOffsets[i];
-            
+
             // Combine bytes into a temporary 32-bit unsigned integer
             const tempContainer =
-            (dataArray[startIndex] << 0) |
-            (dataArray[startIndex + 1] << 8) |
-            (dataArray[startIndex + 2] << 16) |
-            (dataArray[startIndex + 3] << 24);
+                (dataArray[startIndex] << 0) |
+                (dataArray[startIndex + 1] << 8) |
+                (dataArray[startIndex + 2] << 16) |
+                (dataArray[startIndex + 3] << 24);
             const hexValue = '0x' + ('00000000' + (tempContainer >>> 0).toString(16).toUpperCase()).slice(-8);
             console.log("hexValue ", i, " = ", hexValue);
-            
+
             // Update corresponding HTML element with hexadecimal formatted value
             switch (i) {
                 case 0:
                     r0Value.innerHTML = hexValue;
                     break;
-                    case 1:
-                        r1Value.innerHTML = hexValue;
-                        break;
-                        case 2:
-                            r2Value.innerHTML = hexValue;
+                case 1:
+                    r1Value.innerHTML = hexValue;
                     break;
-                    case 3:
+                case 2:
+                    r2Value.innerHTML = hexValue;
+                    break;
+                case 3:
                     r3Value.innerHTML = hexValue;
                     break;
-                    case 4:
-                        r41Value.innerHTML = hexValue;
-                        break;
-                        case 5:
+                case 4:
+                    r41Value.innerHTML = hexValue;
+                    break;
+                case 5:
                     r42Value.innerHTML = hexValue;
                     break;
-                    case 6:
-                        r51Value.innerHTML = hexValue;
-                        break;
-                        case 7:
-                            r52Value.innerHTML = hexValue;
-                            break;
-                            case 8:
+                case 6:
+                    r51Value.innerHTML = hexValue;
+                    break;
+                case 7:
+                    r52Value.innerHTML = hexValue;
+                    break;
+                case 8:
                     r61Value.innerHTML = hexValue;
                     break;
-                    case 9:
-                        r62Value.innerHTML = hexValue;
-                        break;
-                        case 10:
-                            r7Value.innerHTML = hexValue;
+                case 9:
+                    r62Value.innerHTML = hexValue;
                     break;
-                    default:
+                case 10:
+                    r7Value.innerHTML = hexValue;
+                    break;
+                default:
                     break;
             }
         }
     }
-    
+
 
     function handleFreqhopCharacteristicChange(event) {
         const value = event.target.value;
@@ -812,21 +950,21 @@
         const dataArray = new Uint8Array(value.buffer);
         var tempContainer = dataArray[0] | (dataArray[1] << 8) | (dataArray[2] << 16) | (dataArray[3] << 24);
         delayValue.innerHTML = (tempContainer >>> 0);
-        
+
         tempContainer = dataArray[4] | (dataArray[5] << 8) | (dataArray[6] << 16) | (dataArray[7] << 24);
         stepValue.innerHTML = (tempContainer >>> 0) / 1000000;
-        
+
         tempContainer = dataArray[8] | (dataArray[9] << 8) | (dataArray[10] << 16) | (dataArray[11] << 24);
         let targetFreq = (tempContainer >>> 0);
         spanValue.innerHTML = targetFreq / 1000000;
-        
+
     }
-    
-    
+
+
     function sendFrequency(value) {
         if (bleServer && bleServer.connected) {
             bleServiceFound.getCharacteristic(frequencyCharacteristic)
-            .then(characteristic => {
+                .then(characteristic => {
                     value = value * 1000000;
                     console.log("Found the frequency characteristic: ", characteristic.uuid);
                     const data = new Uint8Array([value, value >> 8, value >> 16, value >> 24]);
@@ -840,25 +978,25 @@
                 .catch(error => {
                     console.error("Error writing to the frequency characteristic: ", error);
                 });
-            } else {
-                console.error("Bluetooth is not connected. Cannot write to characteristic.")
-                window.alert("Bluetooth is not connected. Cannot write to characteristic. \n Connect to BLE first!")
-            }
-            
+        } else {
+            console.error("Bluetooth is not connected. Cannot write to characteristic.")
+            window.alert("Bluetooth is not connected. Cannot write to characteristic. \n Connect to BLE first!")
         }
-        
-        function sendHopCommand(index, value) {
-            if (bleServer && bleServer.connected) {
-                bleServiceFound.getCharacteristic(hopCharacteristic)
+
+    }
+
+    function sendHopCommand(index, value) {
+        if (bleServer && bleServer.connected) {
+            bleServiceFound.getCharacteristic(hopCharacteristic)
                 .then(characteristic => {
                     //delay
                     if (index == 0) {
                         value = value /* * 1000; //convert from ms to us */
-                        
+
                         // Step and Span   
                     } else if (index == 1) {
                         value = value * 1000000; //convert from MHz to Hz
-                        
+
                     } else if (index == 2) {
                         console.log("frequencyMHz before adding to value: ", frequencyMHz);
                         console.log("Span value entered by user: ", value);
@@ -886,7 +1024,7 @@
                     const data = new Uint8Array([index, value, value >> 8, value >> 16, value >> 24]);
                     console.log("Value in data container:", data[0], data[1], data[2], data[3], data[4]);
                     return characteristic.writeValue(data);
-                    
+
                 })
                 .catch(error => {
                     console.error("Error writing to the hop characteristic: ", error);
@@ -895,13 +1033,13 @@
             console.error("Bluetooth is not connected. Cannot write to characteristic.")
             window.alert("Bluetooth is not connected. Cannot write to characteristic. \n Connect to BLE first!")
         }
-        
+
     }
-    
+
     function writeControlCharacteristic(value) {
         if (bleServer && bleServer.connected) {
             bleServiceFound.getCharacteristic(controlCharacteristic)
-            .then(characteristic => {
+                .then(characteristic => {
                     console.log("Found the control characteristic: ", characteristic.uuid);
                     const data = new Uint8Array([value]);
                     return characteristic.writeValue(data);
@@ -913,37 +1051,17 @@
                 .catch(error => {
                     console.error("Error writing to the control characteristic: ", error);
                 });
-            } else {
-                console.error("Bluetooth is not connected. Cannot write to characteristic.")
-            window.alert("Bluetooth is not connected. Cannot write to characteristic. \n Connect to BLE first!")
-        }
-    }
-    
-    const writeSettingCharacteristic = (value) => {
-        if (bleServer && bleServer.connected) {
-            bleServiceFound.getCharacteristic(settingCharacteristic)
-            .then(characteristic => {
-                    console.log("Found the setting characteristic: ", characteristic.uuid);
-                    const data = new Uint8Array([value]);
-                    return characteristic.writeValue(data);
-                })
-                .then(() => {
-                    // latestValueSent.innerHTML = value;
-                    console.log("Value written to setting characteristic:", value);
-                })
-                .catch(error => {
-                    console.error("Error writing to the setting characteristic: ", error);
-                });
         } else {
             console.error("Bluetooth is not connected. Cannot write to characteristic.")
             window.alert("Bluetooth is not connected. Cannot write to characteristic. \n Connect to BLE first!")
         }
     }
-    
+
+
     function writeOnCharacteristic(value) {
         if (bleServer && bleServer.connected) {
             bleServiceFound.getCharacteristic(ledCharacteristic)
-            .then(characteristic => {
+                .then(characteristic => {
                     console.log("Found the LED characteristic: ", characteristic.uuid);
                     const data = new Uint8Array([value]);
                     return characteristic.writeValue(data);
@@ -958,6 +1076,47 @@
         } else {
             console.error("Bluetooth is not connected. Cannot write to characteristic.")
             window.alert("Bluetooth is not connected. Cannot write to characteristic. \n Connect to BLE first!")
+        }
+    }
+    const writeEnableCharacteristic = (value) => {
+        if (bleServer && bleServer.connected) {
+
+            return bleServiceFound.getCharacteristic(enableCharacteristic)
+                .then(characteristic => {
+                    console.log(
+                        "Found enable characteristic:",
+                        characteristic.uuid
+                    );
+
+                    const data = new Uint8Array([value]);
+
+                    return characteristic.writeValue(data);
+                })
+                .then(() => {
+                    console.log(
+                        "Value written to enable characteristic:",
+                        value
+                    );
+                })
+                .catch(error => {
+                    console.error(
+                        "Error writing enable characteristic:",
+                        error
+                    );
+
+                    throw error;
+                });
+
+        } else {
+            console.error(
+                "Bluetooth is not connected. Cannot write enable characteristic."
+            );
+
+            window.alert(
+                "Bluetooth is not connected. Connect to BLE first!"
+            );
+
+            return Promise.reject("BLE disconnected");
         }
     }
 

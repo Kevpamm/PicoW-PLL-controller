@@ -36,6 +36,7 @@ pico_sdk_init()
 # Add executable
 add_executable(PLL_BLE
     PLL_PICOW.c
+    dc_supply/digipot_config.c
 )
 
 pico_set_program_name(PLL_BLE "PLL_BLE")
