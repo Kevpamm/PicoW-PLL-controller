@@ -36,6 +36,7 @@ pico_sdk_init()
 # Add executable
 add_executable(PLL_BLE
     PLL_PICOW.c
+    dc_supply/digipot_config.c
 )
 
 pico_set_program_name(PLL_BLE "PLL_BLE")
@@ -67,6 +68,7 @@ target_link_libraries(PLL_BLE
     hardware_adc
     hardware_base
     pico_bootrom
+    hardware_i2c
 )
 
 pico_add_extra_outputs(PLL_BLE)

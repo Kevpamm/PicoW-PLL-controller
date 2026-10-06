@@ -6,21 +6,19 @@
 <html>
 
 <head>
-    <title>ESP32 PLL Controller</title>
+    <title>PICO-W PLL Controller</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/png" href="favicon.ico">
+    <link rel="icon" type="image/png" href="icons/favicon.ico">
     <link rel="stylesheet" type="text/css" href="style.css">
     <meta charset="UTF-8">
 </head>
 
 <body>
     <div class="topnav">
-        <img width="50px" src="W.svg" class="center-image"></img>
-        <h1>ESP32 PLL Controller</h1>
-    </div>
-    <div class="content">
-        <div class="card-grid">
-            <div class="card">
+        <img width="50px" src="icons/W.svg" class="center-image"></img>
+        <h1>Band-switchable RFIC Controller</h1>
+        <div>
+            <div>
                 <p>
                     <button id="connectBleButton" class="connectButton"> Connect to BLE Device</button>
                     <button id="disconnectBleButton" class="disconnectButton"> Disconnect BLE Device</button>
@@ -30,7 +28,29 @@
                     Last BT Received: <span id="timestamp"></span></p>
             </div>
         </div>
-        <div class="card-grid">
+        <div class="page-menu">
+            <button id="settings-menu-btn" class="settings-menu-btn" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"
+                    fill="#e3e3e3">
+                    <path d="M120-240v-80h720v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z" />
+                </svg>
+            </button>
+
+            <div id="settings-dropdown" class="settings-dropdown hidden">
+                <button id="pll-nav-btn" class="dropdown-option active" type="button">
+                    PLL Control
+                </button>
+
+                <button id="dc-supply-nav-btn" class="dropdown-option" type="button">
+                    DC Supply
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="content">
+        <section id="pll-page" class="page-section card-grid">
+
+            <!-- <div class="card-grid"> -->
             <div class="card">
                 <h2>Frequency:</h2>
                 <p class="reading"><span id="freqContainer">NaN</span> MHz</p>
@@ -45,16 +65,27 @@
 
             <div class="card">
                 <h2>Controls</h2>
-
-                <div id="power-down-div">
-                    <span id="switch-label">PLL Power</span>
-                    <label id="pll-power-switch">
-                        <input id="pll-power-input" class="cb" type="checkbox" disabled />
-                        <span class="toggle">
-                            <span class="left">off</span>
-                            <span class="right">on</span>
-                        </span>
-                    </label>
+                <div class="new-buttons-wrapper">
+                    <div class="new-button-div">
+                        <span class="switch-label">PLL Power</span>
+                        <label class="pll-power-switch">
+                            <input id="pll-power-input" class="cb" type="checkbox" disabled />
+                            <span class="toggle">
+                                <span class="left">off</span>
+                                <span class="right">on</span>
+                            </span>
+                        </label>
+                    </div>
+                    <!-- <div class="new-button-div">
+                            <span class="switch-label">Adjustable CP</span>
+                            <label class="pll-power-switch">
+                            <input id="adj-charge-pump-input" class="cb" type="checkbox" disabled />
+                            <span class="toggle">
+                                <span class="left">off</span>
+                                <span class="right">on</span>
+                            </span>
+                        </label>
+                    </div> -->
                 </div>
                 <button id="allRegButton" class="controlButton">Send All Registers</button>
                 <button id="freqRegButton" class="controlButton">Send Freq Registers</button><br>
@@ -66,6 +97,36 @@
                 <button id="fastPinOffButton" class="controlOffButton">Fast Pins Off</button><br>
                 <button id="LedOnButton" class="controlButton">Test LED: On</button>
                 <button id="LedOffButton" class="controlOffButton">Test LED: Off</button><br><br>
+                <div class="radio-group">
+                    <p id="charge-pump-text">Charge Pump Current</p>
+                    <input type="radio" id="radio1" name="charge-pump-current" class="radio-input" value="10">
+                    <label for="radio1" class="radio-label">
+                        <span class="radio-inner-circle"></span>
+                        0.63mA
+                    </label>
+
+                    <input type="radio" id="radio2" name="charge-pump-current" class="radio-input" value="11">
+                    <label for="radio2" class="radio-label">
+                        <span class="radio-inner-circle"></span>
+                        1.57mA
+                    </label>
+
+                    <input type="radio" id="radio3" name="charge-pump-current" class="radio-input" value="12">
+                    <label for="radio3" class="radio-label">
+                        <span class="radio-inner-circle"></span>
+                        2.5mA (Default)
+                    </label>
+                    <input type="radio" id="radio4" name="charge-pump-current" class="radio-input" value="13">
+                    <label for="radio4" class="radio-label">
+                        <span class="radio-inner-circle"></span>
+                        3.75mA
+                    </label>
+                    <input type="radio" id="radio5" name="charge-pump-current" class="radio-input" value="14">
+                    <label for="radio5" class="radio-label">
+                        <span class="radio-inner-circle"></span>
+                        4.8mA
+                    </label>
+                </div>
 
                 <p class="gray-label2">Last button value sent: <span id="valueSent"></span></p>
             </div>
@@ -112,11 +173,127 @@
                     R7: <span id="r7Container">NaN</span><br>
                 </p><br>
             </div>
-        </div>
+            <!-- </div> -->
+        </section>
+        <section id="dc-supply-page" class="page-section hidden ">
+            <!-- <header>
+                <span>DC Supply Control</span>
+            </header> -->
+            <div class="dc-supply-control-div">
+                <div class="main-settings-div">
+                    <button id="back-to-default-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"
+                            fill="#e3e3e3">
+                            <path
+                                d="M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 132 28.5T720-690v-110h80v280H520v-80h168q-32-56-87.5-88T480-720q-100 0-170 70t-70 170q0 100 70 170t170 70q77 0 139-44t87-116h84q-28 106-114 173t-196 67Z" />
+                        </svg>
+                        Back To Default</button>
+                    <div class="power-saving-div">
+                        <span class="power-saving-label">Power-saving Mode</span>
+                        <label class="power-saving-switch">
+                            <input id="power-saving-btn" type="checkbox">
+                            <span class="power-saving-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="voltage-settings-div">
+                    <div class="buck-converter-div">
+                        <span>Buck Converter</span>
+                        <div class="voltage-display-div">
+                            <span class="voltage-reading" id="pin-1-reading">3.80</span>
+                            <span class="voltage-unit">V</span>
+                        </div>
+                        <div class="increase-decrease-div">
+                            <button class="decrease-btn" id="decrease-pin1">
+                                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+                                    width="24px" fill="#e3e3e3">
+                                    <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z" />
+                                </svg>
+                            </button>
+                            <button class="increase-btn" id="increase-pin1">
+                                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+                                    width="24px" fill="#e3e3e3">
+                                    <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="ldos-div">
+                        <div class="ldo-div" id="pin-3-div">
+                            <span>Pin 3</span>
+                            <div class="voltage-display-div">
+                                <span class="voltage-reading" id="pin-3-reading">2.60 </span>
+                                <span class="voltage-unit">V</span>
+                            </div>
+                            <div class="increase-decrease-div">
+                                <button class="decrease-btn" id="decrease-pin3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+                                        width="24px" fill="#e3e3e3">
+                                        <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z" />
+                                    </svg>
+                                </button>
+                                <label class="switch">
+                                    <input id="toggle-pin-3" type="checkbox" checked="checked">
+                                    <div class="button">
+                                        <div class="light"></div>
+                                        <div class="dots"></div>
+                                        <div class="characters"></div>
+                                        <div class="shine"></div>
+                                        <div class="shadow"></div>
+                                    </div>
+                                </label>
+                                <button class="increase-btn" id="increase-pin3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+                                        width="24px" fill="#e3e3e3">
+                                        <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="ldo-div" id="pin-12-div">
+                            <span>Pin 12</span>
+                            <div class="voltage-display-div">
+                                <span class="voltage-reading" id="pin-12-reading">2.00 </span>
+                                <span class="voltage-unit">V</span>
+                            </div>
+                            <div class="increase-decrease-div">
+                                <button class="decrease-btn" id="decrease-pin12">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+                                        width="24px" fill="#e3e3e3">
+                                        <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z" />
+                                    </svg>
+                                </button>
+                                <label class="switch">
+                                    <input id="toggle-pin-12" type="checkbox" checked="checked">
+                                    <div class="button">
+                                        <div class="light"></div>
+                                        <div class="dots"></div>
+                                        <div class="characters"></div>
+                                        <div class="shine"></div>
+                                        <div class="shadow"></div>
+                                    </div>
+                                </label>
+                                <button class="increase-btn" id="increase-pin12">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+                                        width="24px" fill="#e3e3e3">
+                                        <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
     <div class="footer">
         <p>
-        <h3>Created for UW Tacoma research 2024.</h3>
+        <h3>- Created for UW Tacoma research 2024.
+            <br>
+            - Updated for UW Tacoma reseach 2026.
+        </h3>
+        <h3></h3>
         </p><br>
     </div>
 </body>
@@ -126,6 +303,42 @@
     const disconnectButton = document.getElementById('disconnectBleButton');
     const bleStateContainer = document.getElementById('bleState');
     const timestampContainer = document.getElementById('timestamp');
+    const settingsMenuButton = document.getElementById("settings-menu-btn");
+    const settingsDropdown = document.getElementById("settings-dropdown");
+    const pllNavButton = document.getElementById("pll-nav-btn");
+    const dcSupplyNavButton = document.getElementById("dc-supply-nav-btn");
+
+    const pllPage = document.getElementById("pll-page");
+    const dcSupplyPage = document.getElementById("dc-supply-page");
+
+    const togglePin3 = document.getElementById("toggle-pin-3");
+    const togglePin12 = document.getElementById("toggle-pin-12");
+    settingsMenuButton.addEventListener("click", () => {
+        settingsDropdown.classList.toggle("hidden");
+        settingsMenuButton.classList.toggle("menu-active");
+    });
+
+    pllNavButton.addEventListener("click", () => {
+        pllPage.classList.remove("hidden");
+        dcSupplyPage.classList.add("hidden");
+
+        pllNavButton.classList.add("active");
+        dcSupplyNavButton.classList.remove("active");
+
+        settingsMenuButton.classList.remove("menu-active");
+        settingsDropdown.classList.add("hidden");
+    });
+
+    dcSupplyNavButton.addEventListener("click", () => {
+        dcSupplyPage.classList.remove("hidden");
+        pllPage.classList.add("hidden");
+
+        dcSupplyNavButton.classList.add("active");
+        pllNavButton.classList.remove("active");
+
+        settingsMenuButton.classList.remove("menu-active");
+        settingsDropdown.classList.add("hidden");
+    });
 
     const freqValue = document.getElementById('freqContainer');
     const frequencyInput = document.getElementById("frequencyInput");
@@ -144,6 +357,7 @@
     const LedOnButton = document.getElementById('LedOnButton');
     const LedOffButton = document.getElementById('LedOffButton');
     const latestValueSent = document.getElementById('valueSent');
+    const chargePumpRadios = document.querySelectorAll('input[name="charge-pump-current"]');
 
     const delayValue = document.getElementById('delayContainer');
     const delayInput = document.getElementById("freqHopDelayInput");
@@ -171,6 +385,22 @@
     const r62Value = document.getElementById('r62Container');
     const r7Value = document.getElementById('r7Container');
 
+    // DC Supply button
+    const backToDefaultButton = document.getElementById("back-to-default-btn");
+    const powerSavingButton = document.getElementById("power-saving-btn");
+
+    const pin1VoltageDisplay = document.getElementById("pin-1-reading");
+    const pin3VoltageDisplay = document.getElementById("pin-3-reading");
+    const pin12VoltageDisplay = document.getElementById("pin-12-reading");
+
+    const decreasePin1Button = document.getElementById("decrease-pin1");
+    const increasePin1Button = document.getElementById("increase-pin1");
+
+    const decreasePin3Button = document.getElementById("decrease-pin3");
+    const increasePin3Button = document.getElementById("increase-pin3");
+
+    const decreasePin12Button = document.getElementById("decrease-pin12");
+    const increasePin12Button = document.getElementById("increase-pin12");
 
     //Define BLE Device Specs
     var deviceName = 'PLL-PICO';
@@ -180,6 +410,9 @@
     var hopCharacteristic = '50e12003-a21d-4471-b2f0-412147c8399e';
     var registerCharacteristic = '50e12004-a21d-4471-b2f0-412147c8399e';
     var ledCharacteristic = '50e12010-a21d-4471-b2f0-412147c8399e';
+    var resistorCharacteristic = 'a6bce7c3-2fc7-40c3-88a8-5032d63f353a';
+    var settingCharacteristic = 'f8a93cd2-fdda-43d7-b6f3-d5050e7173a2';
+    var enableCharacteristic = 'c82bdf01-4408-4bb1-9b42-461bbaf57d07';
 
     //Global Variables to Handle Bluetooth
     var bleServer;
@@ -188,6 +421,157 @@
 
     var frequencyMHz;
     var delayms;
+
+
+    // DC Supply constants and variables
+    const CODE_MIN = 1;
+    const CODE_MAX = 255;
+    const PIN3_DISABLE = 0;
+    const PIN12_DISABLE = 1;
+    const PIN3_ENABLE = 10;
+    const PIN12_ENABLE = 11;
+
+    const power_saving_buck_converter_code = 55; //0x37 in digipot_config.c
+    const power_saving_buck_converter_voltage = 2.80
+    const default_buck_converter_code = 40;
+    const default_pin3_code = 120;
+    const power_saving_pin3_code = 215; //0xD7
+    const power_saving_pin3_voltage = 1.45;
+    const power_saving_pin12_code = 240; //0xF0
+    const power_saving_pin12_voltage = 1.30;
+    const default_pin12_code = 156;
+
+    let buck_converter_voltage = 3.80;
+    let buck_converter_code = default_buck_converter_code;
+
+    let pin_3_voltage = 2.60;
+    let pin_3_code = default_pin3_code;
+
+    let pin_12_voltage = 2.00;
+    let pin_12_code = default_pin12_code;
+
+    // DC supply functions
+    const clamp = (value, min, max) => {
+        return Math.min(Math.max(value, min), max);
+    }
+
+    const updateVoltageDisplays = () => {
+        pin1VoltageDisplay.innerHTML = buck_converter_voltage.toFixed(2);
+        pin3VoltageDisplay.innerHTML = pin_3_voltage.toFixed(2);
+        pin12VoltageDisplay.innerHTML = pin_12_voltage.toFixed(2);
+    }
+    const calculateNextStep = (pinNumber, direction) => {
+        const codeStep = direction === "increase" ? -1 : +1;
+        let ratio;
+        if (pinNumber === 1) {
+            buck_converter_code = clamp(buck_converter_code + codeStep, CODE_MIN, CODE_MAX);
+            ratio = (1 - (buck_converter_code / 256)) / (buck_converter_code / 256);
+            buck_converter_voltage = 0.6 * (1 + ratio);
+        }
+        else if (pinNumber === 3) {
+            pin_3_code = clamp(pin_3_code + codeStep, CODE_MIN, CODE_MAX);
+            ratio = (1 - (pin_3_code / 256)) / (pin_3_code / 256);
+            pin_3_voltage = 1.22 * (1 + ratio);
+        }
+        else if (pinNumber === 12) {
+            pin_12_code = clamp(pin_12_code + codeStep, CODE_MIN, CODE_MAX);
+            ratio = (1 - (pin_12_code / 256)) / (pin_12_code / 256);
+            pin_12_voltage = 1.22 * (1 + ratio);
+        }
+        updateVoltageDisplays();
+    }
+
+    const digipotConfig = {
+        // Pin 1 or buck converter = 3.8V default
+        1: {
+            slaveAddr: 0x50,
+            registerAddr: 0x00
+        },
+
+        // Pin 3 = 2.6V default
+        3: {
+            slaveAddr: 0x50,
+            registerAddr: 0x01
+        },
+
+        // Pin 12 = 2.0V default
+        12: {
+            slaveAddr: 0x51,
+            registerAddr: 0x00
+        }
+    }
+    const sendDigipotCode = (pinNumber, code) => {
+        if (bleServer && bleServer.connected) {
+            bleServiceFound.getCharacteristic(resistorCharacteristic)
+                .then(characteristic => {
+                    console.log("Found the resistor characteristic: ", characteristic.uuid);
+
+                    const data = packageDigipotData(pinNumber, code);
+
+                    if (!data) {
+                        return null;
+                    }
+                    console.log("Value in data container:", data[3], data[2], data[1], data[0]);
+                    return characteristic.writeValue(data);
+                })
+                .catch(error => {
+                    console.error("Error writing to the resistor characteristic: ", error);
+                });
+        } else {
+            console.error("Bluetooth is not connected. Cannot write to characteristic.")
+            window.alert("Bluetooth is not connected. Cannot write to characteristic. \n Connect to BLE first!")
+        }
+    }
+    const sendRollbackRegister = (...pins) => {
+        if (bleServer && bleServer.connected) {
+            bleServiceFound.getCharacteristic(settingCharacteristic)
+                .then(characteristic => {
+                    console.log("Found the setting characteristic: ", characteristic.uuid);
+                    const data = new Uint8Array([pins]);
+                    return characteristic.writeValue(data);
+                })
+                .then(() => {
+                    // latestValueSent.innerHTML = value;
+                    console.log("Value written to setting characteristic:", data);
+                })
+                .catch(error => {
+                    console.error("Error writing to the setting characteristic: ", error);
+                });
+        } else {
+            console.error("Bluetooth is not connected. Cannot write to characteristic.")
+            window.alert("Bluetooth is not connected. Cannot write to characteristic. \n Connect to BLE first!")
+        }
+    }
+    const writeSettingCharacteristic = (value) => {
+        if (bleServer && bleServer.connected) {
+            bleServiceFound.getCharacteristic(settingCharacteristic)
+                .then(characteristic => {
+                    console.log("Found the setting characteristic: ", characteristic.uuid);
+                    const data = new Uint8Array([value]);
+                    return characteristic.writeValue(data);
+                })
+                .then(() => {
+                    // latestValueSent.innerHTML = value;
+                    console.log("Value written to setting characteristic:", value);
+                })
+                .catch(error => {
+                    console.error("Error writing to the setting characteristic: ", error);
+                });
+        } else {
+            console.error("Bluetooth is not connected. Cannot write to characteristic.")
+            window.alert("Bluetooth is not connected. Cannot write to characteristic. \n Connect to BLE first!")
+        }
+    }
+    const packageDigipotData = (pinNumber, code) => {
+        const address = digipotConfig[pinNumber];
+
+        if (!address) {
+            console.error("Invalid pin number", pinNumber);
+            return null;
+        }
+        return new Uint8Array([pinNumber, address.slaveAddr, address.registerAddr, code]);
+    }
+    // End of DC supply functions
 
     const frequency = [[920, 949], [970, 996], [1074, 1106], [1209, 1266], [1270, 1323], [1442, 1514], [1695, 1811], [2142, 2401]];
 
@@ -232,18 +616,155 @@
         }
 
     });
-    
+    chargePumpRadios.forEach((radio) => {
+        radio.addEventListener('change', () => {
+            if (!radio.checked) {
+                return;
+            }
+
+            if (bleServer && bleServer.connected) {
+                const controlValue = Number(radio.value);
+                console.log("Charge pump current selected. Control value:", controlValue);
+                writeControlCharacteristic(controlValue);
+            }
+            else {
+                console.error("Bluetooth is not connected. Cannot write charge pump current.");
+                window.alert("Bluetooth is not connected. Connect to BLE first!");
+                radio.checked = false;
+            }
+        });
+    });
+
     // Freq Hop Buttons
     enterDelayButton.addEventListener('click', () => sendHopCommand(0, delayInput.value));
     enterStepButton.addEventListener('click', () => sendHopCommand(1, stepInput.value));
     enterSpanButton.addEventListener('click', () => sendHopCommand(2, spanInput.value));
     hopOnButton.addEventListener('click', () => sendHopCommand(3, 0));
     hopOffButton.addEventListener('click', () => sendHopCommand(4, 0));
-    
+
     // Write to the ESP32 LED Characteristic
     LedOnButton.addEventListener('click', () => writeOnCharacteristic(1));
     LedOffButton.addEventListener('click', () => writeOnCharacteristic(0));
-    
+
+    // DC Supply characteristics
+
+    // Write to Setting Characteristic - Write 0 to command reset DC supply, 1 to command power saving mode
+    // The pico receives 0 / 1 and handles the logic
+    backToDefaultButton.addEventListener("click", () => {
+        writeSettingCharacteristic(0);
+        buck_converter_voltage = 3.80;
+        buck_converter_code = default_buck_converter_code;
+        pin_3_voltage = 2.60;
+        pin_3_code = default_pin3_code;
+        pin_12_voltage = 2.00;
+        pin_12_code = default_pin12_code;
+        updateVoltageDisplays();
+    });
+    // const power_saving_buck_converter_code = 55; //0x37 in digipot_config.c
+    // const power_saving_buck_converter_voltage = 2.80
+    // const default_buck_converter_code = 40;
+    // const default_pin3_code = 120;
+    // const power_saving_pin3_code = 215;
+    // const power_saving_pin3_voltage = 1.45;
+    // const power_saving_pin12_code = 240;
+    // const power_saving_pin12_voltage = 1.30;
+    // const default_pin12_code = 156;
+    powerSavingButton.addEventListener("change", () => {
+        // let temp_pin_3_code = pin_3_code;
+        // let temp_pin_12_code = pin_12_code;
+        // let temp_buck_converter_code = buck_converter_code;
+
+        // let temp_pin_3_voltage = pin_3_voltage;
+        // let temp_pin_12_voltage = pin_12_voltage;
+        // let temp_buck_converter_voltage = buck_converter_voltage;
+        if (powerSavingButton.checked) {
+            writeSettingCharacteristic(1);
+
+            buck_converter_code = power_saving_buck_converter_code;
+            buck_converter_voltage = power_saving_buck_converter_voltage;
+            pin_3_code = power_saving_pin3_code;
+            pin_3_voltage = power_saving_pin3_voltage;
+            pin_12_code = power_saving_pin12_code;
+            pin_12_voltage = power_saving_pin12_voltage;
+            updateVoltageDisplays();
+        } else {
+            // buck_converter_code = temp_buck_converter_code;
+            // buck_converter_voltage = temp_buck_converter_code;
+            // pin_3_code = temp_pin_3_code;
+            // pin_3_voltage = temp_pin_3_voltage;
+            // pin_12_code = temp_pin_12_code;
+            // pin_12_voltage = temp_pin_12_voltage;
+            // updateVoltageDisplays();
+            // sendRollbackRegister(pin_3_code, pin_12_code, buck_converter_code)
+            buck_converter_voltage = 3.80;
+            buck_converter_code = default_buck_converter_code;
+            pin_3_voltage = 2.60;
+            pin_3_code = default_pin3_code;
+            pin_12_voltage = 2.00;
+            pin_12_code = default_pin12_code;
+            writeSettingCharacteristic(0);
+            updateVoltageDisplays();
+        }
+    });
+
+    // Write to Resistor Characteristic - the written packet contains: Slave Addr, Register Addr, and Digipot Code.
+    increasePin1Button.addEventListener("click", () => {
+        calculateNextStep(1, "increase");
+        sendDigipotCode(1, buck_converter_code);
+    });
+
+    decreasePin1Button.addEventListener("click", () => {
+        calculateNextStep(1, "decrease");
+        sendDigipotCode(1, buck_converter_code);
+
+    });
+
+    increasePin3Button.addEventListener("click", () => {
+        calculateNextStep(3, "increase");
+        sendDigipotCode(3, pin_3_code);
+
+    });
+
+    decreasePin3Button.addEventListener("click", () => {
+        calculateNextStep(3, "decrease");
+        sendDigipotCode(3, pin_3_code);
+
+    });
+
+    increasePin12Button.addEventListener("click", () => {
+        calculateNextStep(12, "increase");
+        sendDigipotCode(12, pin_12_code);
+
+    });
+
+    decreasePin12Button.addEventListener("click", () => {
+        calculateNextStep(12, "decrease");
+        sendDigipotCode(12, pin_12_code);
+
+    });
+
+    togglePin3.addEventListener("change", () => {
+
+        const command = togglePin3.checked
+            ? PIN3_ENABLE
+            : PIN3_DISABLE;
+
+        writeEnableCharacteristic(command)
+            // .catch(() => {
+            //     // Undo UI change if BLE write failed
+            //     togglePin3.checked = !togglePin3.checked;
+            // });
+    });
+
+
+    togglePin12.addEventListener("change", () => {
+        const command = togglePin12.checked ? PIN12_ENABLE : PIN12_DISABLE;
+        
+        writeEnableCharacteristic(command).catch(() => {
+            togglePin12.checked = !togglePin12.checked;
+        });
+    });
+
     // Check if BLE is available in your Browser
     function isWebBluetoothEnabled() {
         if (!navigator.bluetooth) {
@@ -428,7 +949,7 @@
         //  console.log("Characteristic register values changed");
         const dataArray = new Uint8Array(value.buffer);
         var tempContainer = dataArray[0] | (dataArray[1] << 8) | (dataArray[2] << 16) | (dataArray[3] << 24);
-        delayValue.innerHTML = (tempContainer >>> 0) ;
+        delayValue.innerHTML = (tempContainer >>> 0);
 
         tempContainer = dataArray[4] | (dataArray[5] << 8) | (dataArray[6] << 16) | (dataArray[7] << 24);
         stepValue.innerHTML = (tempContainer >>> 0) / 1000000;
@@ -536,6 +1057,7 @@
         }
     }
 
+
     function writeOnCharacteristic(value) {
         if (bleServer && bleServer.connected) {
             bleServiceFound.getCharacteristic(ledCharacteristic)
@@ -554,6 +1076,47 @@
         } else {
             console.error("Bluetooth is not connected. Cannot write to characteristic.")
             window.alert("Bluetooth is not connected. Cannot write to characteristic. \n Connect to BLE first!")
+        }
+    }
+    const writeEnableCharacteristic = (value) => {
+        if (bleServer && bleServer.connected) {
+
+            return bleServiceFound.getCharacteristic(enableCharacteristic)
+                .then(characteristic => {
+                    console.log(
+                        "Found enable characteristic:",
+                        characteristic.uuid
+                    );
+
+                    const data = new Uint8Array([value]);
+
+                    return characteristic.writeValue(data);
+                })
+                .then(() => {
+                    console.log(
+                        "Value written to enable characteristic:",
+                        value
+                    );
+                })
+                .catch(error => {
+                    console.error(
+                        "Error writing enable characteristic:",
+                        error
+                    );
+
+                    throw error;
+                });
+
+        } else {
+            console.error(
+                "Bluetooth is not connected. Cannot write enable characteristic."
+            );
+
+            window.alert(
+                "Bluetooth is not connected. Connect to BLE first!"
+            );
+
+            return Promise.reject("BLE disconnected");
         }
     }
 
