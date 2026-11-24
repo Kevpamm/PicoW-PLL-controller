@@ -16,6 +16,9 @@ static inline void storeFrequency(uint8_t *field, uint32_t frequency);
 static inline uint32_t parse_32bit_buffer(uint8_t *buffer, uint16_t buffer_size);
 static inline void notify_register_characteristic(void);
 static inline void notify_frequency_characteristic(void);
+extern bool i2c_write_register(volatile uint8_t *handler, bool nostop_or_not);
+extern bool i2c_write_ACR_register(volatile uint8_t *device_address, uint8_t digipot_mux_channel, bool is_volatile);
+extern bool i2c_write_ACR_register_non_vol_variable(uint8_t *device_address, uint8_t digipot_mux_channel, bool is_volatile);
 
 extern volatile bool frequency_receipt_status;
 extern volatile bool hop_delay_time_receipt_status;
@@ -28,7 +31,16 @@ extern volatile uint32_t stepFrequency_inHz;
 extern volatile uint32_t spanFrequency_inHz;
 extern volatile uint32_t stopFrequency_inHz;
 extern volatile uint16_t charge_pump_current;
-extern volatile uint8_t i2c_packet_to_send[3];
+
+
+extern volatile uint8_t i2c_packet_to_send[4];
+extern volatile uint8_t pinNumber_for_resistor_change;
+extern volatile int64_t all_resistor_second_time_flag;
+
+extern volatile uint8_t pinNumber_for_enable_change;
+extern volatile uint8_t all_pin_enable_flag[46];
+
+
 
 // Flags between this file and main "PLL_PICOW.c".
 extern volatile bool power_down_pll_flag;
@@ -72,15 +84,13 @@ enum ControlValue
 };
 enum EnableValue
 {
-    PIN3_DISABLE = 0,
-    PIN12_DISABLE = 1,
-    PIN3_ENABLE = 10,
-    PIN12_ENABLE = 11
+    DISABLE = 0,
+    ENABLE = 1,
 };
+
 // This struct manages our service
 typedef struct
 {
-
     hci_con_handle_t con_handle;
 
     // Frequency Characteristic Information
@@ -121,9 +131,6 @@ typedef struct
     uint16_t characteristic_resistor_value_length;
     char *characteristic_resistor_user_description;
 
-    uint8_t *characteristic_enable_value;
-    uint16_t characteristic_enable_value_length;
-
     // Frequency Characteristic Handle
     uint16_t characteristic_frequency_handle;
     uint16_t characteristic_frequency_client_configuration_handle;
@@ -156,14 +163,10 @@ typedef struct
     uint16_t characteristic_resistor_client_configuration_handle;
     uint16_t characteristic_resistor_user_description_handle;
 
-    // Enabling Chacteristic handle
-    uint16_t characteristic_enable_handle;
-
     btstack_context_callback_registration_t callback_Frequency;
     btstack_context_callback_registration_t callback_Hop;
     btstack_context_callback_registration_t callback_Register;
     btstack_context_callback_registration_t callback_Resistor;
-    btstack_context_callback_registration_t callback_Enable;
 } PLL_service_t;
 
 static att_service_handler_t service_handler;
@@ -504,113 +507,62 @@ static int PLL_service_write_callback(hci_con_handle_t con_handle, uint16_t attr
     else if (attribute_handle == service_object.characteristic_resistor_handle)
     {
         PLL_service_t *instance = &service_object;
-        if (buffer_size != 4)
+        if (buffer_size != 6)
         {
             printf("Invalid I2C package received from UI. Buffer size: %u", buffer_size);
             return -1;
         }
-        uint8_t pinNumber = buffer[0];
-        switch (pinNumber)
-        {
-        case 1:
-            receive_pin_1_flag = true;
-            break;
-        case 3:
-            receive_pin_3_flag = true;
-            break;
-        case 12:
-            receive_pin_12_flag = true;
-            break;
-        default:
-            printf("No flag setup for this IC pin. Add it in resistor write call. Pin: %u", pinNumber);
-            break;
+        if (!buffer[1]) {
+            pinNumber_for_resistor_change = buffer[0];
+            i2c_packet_to_send[0] = buffer[2];
+            i2c_packet_to_send[1] = buffer[3];
+            i2c_packet_to_send[2] = buffer[4];
+            i2c_packet_to_send[3] = buffer[5];
+        
+            printf("slave addr received: %x\n", i2c_packet_to_send[0]);
+            printf("reg addr received: %x\n", i2c_packet_to_send[1]);
+            printf("code received 2: %u\n\n", i2c_packet_to_send[2]);
+            resistor_code_flag = true;
         }
-        i2c_packet_to_send[0] = buffer[1];
-        i2c_packet_to_send[1] = buffer[2];
-        i2c_packet_to_send[2] = buffer[3];
-        printf("slave addr received: %x\n", i2c_packet_to_send[0]);
-        printf("reg addr received: %x\n", i2c_packet_to_send[1]);
-        printf("code received 2: %u\n\n", i2c_packet_to_send[2]);
-        resistor_code_flag = true;
-    }
-    else if (attribute_handle == service_object.characteristic_enable_handle)
-    {
-        PLL_service_t *instance = &service_object;
-
-        if (buffer_size != 1)
-        {
-            printf(
-                "Invalid write to enable characteristic. "
-                "Expected 1 byte, received %u\n",
-                buffer_size);
-
-            return -1;
+        else {
+            pinNumber_for_enable_change = buffer[0];
+            uint8_t command = buffer[2];
+            all_pin_enable_flag[pinNumber_for_enable_change - 1] = command;
+            enable_command_flag = true;
+            // printf("Enable command received: %u\n", command);
         }
-
-        uint8_t command = buffer[0];
-
-        switch (command) {
-            case PIN3_DISABLE:
-                disable_pin_3_flag = true;
-                break;
-            case PIN12_DISABLE:
-                disable_pin_12_flag = true;
-                break;
-            case PIN3_ENABLE:
-                enable_pin_3_flag = true;
-                break;
-            case PIN12_ENABLE:
-                enable_pin_12_flag = true;
-                break;
-            // Store the last command in the BLE characteristic buffer
-
-            default:
-            printf("Invalid enable command received: %u\n", command);
-            return -1;
-        }
-        instance->characteristic_enable_value[0] = command;
-        instance->characteristic_enable_value_length = 1;
-
-        // Tell main() that a new enable command arrived
-        // enable_command = command;
-        enable_command_flag = true;
-
-        printf("Enable command received: %u\n", command);
-
         return 0;
     }
 }
 
 // Initialize our PLL service handler:
 
-void PLL_service_server_init(uint8_t *frequency_ptr, uint8_t *control_ptr, uint8_t *hop_ptr, uint8_t *register_ptr, uint8_t *led_ptr, uint8_t *setting_ptr, uint8_t *resistor_ptr, uint8_t *enable_ptr)
+void PLL_service_server_init(uint8_t *frequency_ptr, uint8_t *control_ptr, uint8_t *hop_ptr, uint8_t *register_ptr, uint8_t *led_ptr, uint8_t *setting_ptr, uint8_t *resistor_ptr)
 {
     // Pointer to our service_object
     PLL_service_t *instance = &service_object;
 
     instance->characteristic_frequency_value = frequency_ptr;
-    instance->characteristic_frequency_value_length = 4;
+    instance->characteristic_frequency_value_length = 20;
 
     instance->characteristic_control_value = control_ptr;
-    instance->characteristic_control_length = 1;
+    instance->characteristic_control_length = 2;
 
     instance->characteristic_hop_value = hop_ptr;
-    instance->characteristic_hop_value_length = 12;
+    instance->characteristic_hop_value_length = 20;
 
     instance->characteristic_register_value = register_ptr;
-    instance->characteristic_register_value_length = 52;
+    instance->characteristic_register_value_length = 100; //52
 
     instance->characteristic_LED_value = led_ptr;
-    instance->characteristic_LED_value_length = 1;
+    instance->characteristic_LED_value_length = 5;
 
     instance->characteristic_setting_value = setting_ptr;
-    instance->characteristic_setting_value_length = 1;
+    instance->characteristic_setting_value_length = 4;
 
     instance->characteristic_resistor_value = resistor_ptr;
-    instance->characteristic_resistor_value_length = 4;
+    instance->characteristic_resistor_value_length = 100;
 
-    instance->characteristic_enable_value = enable_ptr;
-    instance->characteristic_enable_value_length = 1;
     instance->characteristic_frequency_user_description = characteristic_frequency;
     instance->characteristic_control_user_description = characteristic_control;
 
@@ -643,9 +595,8 @@ void PLL_service_server_init(uint8_t *frequency_ptr, uint8_t *control_ptr, uint8
 
     instance->characteristic_resistor_handle = ATT_CHARACTERISTIC_a6bce7c3_2fc7_40c3_88a8_5032d63f353a_01_VALUE_HANDLE;
     instance->characteristic_resistor_client_configuration_handle = ATT_CHARACTERISTIC_a6bce7c3_2fc7_40c3_88a8_5032d63f353a_01_CLIENT_CONFIGURATION_HANDLE;
-    instance->characteristic_register_user_description_handle = ATT_CHARACTERISTIC_a6bce7c3_2fc7_40c3_88a8_5032d63f353a_01_USER_DESCRIPTION_HANDLE;
+    instance->characteristic_resistor_user_description_handle = ATT_CHARACTERISTIC_a6bce7c3_2fc7_40c3_88a8_5032d63f353a_01_USER_DESCRIPTION_HANDLE;
 
-    instance->characteristic_enable_handle = ATT_CHARACTERISTIC_c82bdf01_4408_4bb1_9b42_461bbaf57d07_01_VALUE_HANDLE;
     service_handler.start_handle = ATT_SERVICE_50e12000_a21d_4471_b2f0_412147c8399e_START_HANDLE;
     service_handler.end_handle = ATT_SERVICE_50e12000_a21d_4471_b2f0_412147c8399e_END_HANDLE;
 

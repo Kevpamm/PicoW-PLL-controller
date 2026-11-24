@@ -114,7 +114,7 @@ h3 {
 }
 
 .dc-supply-control-div {
-    max-width: 900px;
+    max-width: 1300px;
     margin: 0 auto;
     padding: 24px;
     border-radius: 8px;
@@ -243,7 +243,7 @@ h3 {
 
 .ldos-div {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 18px;
 }
 
@@ -298,22 +298,34 @@ h3 {
     }
 }
 
-.decrease-btn:hover,
-.increase-btn:hover {
+.decrease-btn:not(.disabled):hover,
+.increase-btn:not(.disabled):hover {
     background-color: #4b2e83;
 }
 
-.decrease-btn:hover svg,
-.increase-btn:hover svg {
+.decrease-btn:not(.disabled):hover svg,
+.increase-btn:not(.disabled):hover svg {
     fill: #FFC700;
 }
 
-.decrease-btn:active,
-.increase-btn:active {
+.decrease-btn:not(.disabled):active,
+.increase-btn:not(.disabled):active {
     filter: brightness(75%);
 }
 
+.disabled {
+    filter: brightness(30%);
+    cursor: not-allowed;
+    transition: none;
+}
 
+.disabled:hover,
+.disabled:active {
+    filter: brightness(30%);
+    background-color: #0A1128;
+    transform: none;
+    box-shadow: none;
+}
 
 /* 
 #dc-supply-page {
@@ -476,7 +488,7 @@ body {
 }
 
 .content {
-    padding: 50px;
+    padding: 20px;
 }
 
 
@@ -936,6 +948,8 @@ button:active {
     background-repeat: no-repeat;
 }
 
+
+
 @keyframes flicker {
     0% {
         opacity: 1;
@@ -960,25 +974,88 @@ button:active {
     }
 }
 
-/* @media (max-width: 700px) {
-    .main-settings-div {
-        flex-direction: column;
-        align-items: stretch;
-    }
+/* ===== RED VERSION ===== */
 
-    .power-saving-div {
-        justify-content: space-between;
-    }
 
-    .ldos-div {
-        grid-template-columns: 1fr;
-    }
+.switch-red input:checked+.button {
+    box-shadow: 0 -10px 20px #ff304b;
+}
 
-    .nav-btn {
-        width: 100%;
-        max-width: 300px;
-    }
-} */
+.switch-red .button {
+    background-color: #b51f2e;
+    background-image: linear-gradient(#c92735 0%,
+            #8f1726 30%,
+            #891523 70%,
+            #bd2432 100%);
+}
+
+
+.switch-red .button::before {
+    background:
+        linear-gradient(rgba(255, 255, 255, 0.8) 10%,
+            rgba(255, 255, 255, 0.3) 30%,
+            #7e1522 75%,
+            #390810) 50% 50% / 97% 97%,
+        #df3040;
+}
+
+
+.switch-red .button::after {
+    background-image: linear-gradient(#70121e,
+            #31070e);
+}
+
+
+.switch-red .light {
+    background-image: radial-gradient(#ff9aaa,
+            #ff304b 40%,
+            transparent 70%);
+}
+
+.switch-red .dots {
+    background-image: radial-gradient(transparent 30%,
+            rgba(126, 12, 29, 0.7) 70%);
+}
+
+
+/* ===== GREEN SWITCH VERSION ===== */
+.switch-green input:checked+.button {
+    box-shadow: 0 -10px 20px #20ff88;
+}
+
+.switch-green .button {
+    background-color: #008c4d;
+    background-image: linear-gradient(#00a85c 0%,
+            #007b43 30%,
+            #007640 70%,
+            #009f56 100%);
+}
+
+.switch-green .button::before {
+    background:
+        linear-gradient(rgba(255, 255, 255, 0.8) 10%,
+            rgba(255, 255, 255, 0.3) 30%,
+            #006e3c 75%,
+            #00331d) 50% 50% / 97% 97%,
+        #00bb65;
+}
+
+.switch-green .button::after {
+    background-image: linear-gradient(#006637,
+            #002e1a);
+}
+
+.switch-green .light {
+    background-image: radial-gradient(#9affc4,
+            #20ff88 40%,
+            transparent 70%);
+}
+
+.switch-green .dots {
+    background-image: radial-gradient(transparent 30%,
+            rgba(0, 105, 56, 0.7) 70%);
+}
+
 
 @media (max-width: 450px) {
     .content {

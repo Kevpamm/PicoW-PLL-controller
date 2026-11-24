@@ -104,11 +104,19 @@ uint32_t R7 = 0x7;
 #define I2C_SDA_PIN 4
 #define I2C_SCL_PIN 5
 #define I2C_BAUDRATE 400000
+#define I2C_MUX_ADDR 0x70
 
 // ADVERTISEMENT FLAGS
 #define APP_AD_FLAGS 0x06 // This flag is for General Discoverable in advertising data, meaning everyone can discover our device and advertising_data
-#define BUFFER_SIZE 100
 #define BANDS 8
+#define FREQUENCY_BUFFER_SIZE 100
+#define CONTROL_BUFFER_SIZE 100
+#define HOP_BUFFER_SIZE 100
+#define REGISTER_BUFFER_SIZE 100
+#define LED_BUFFER_SIZE 100
+#define SETTING_BUFFER_SIZE 100
+#define RESISTOR_BUFFER_SIZE 100
+
 // CONNECTED BLE FLASG
 volatile bool TESTING_FLAG = false;
 
@@ -126,12 +134,38 @@ volatile bool changeR2_flag = false;
 volatile bool default_dc_mode_flag = false;
 volatile bool power_saving_mode_flag = false;
 
+/**
+ * This flag is to tell that the pico has received command to change the step of a digipot
+ *
+ * true: service_implementation has received a command. main needs to do i2c_write
+ * false: No command received.
+ */
 volatile bool resistor_code_flag = false;
+
+/**
+ * - If a bit at index i of this integer is 0, the digipot for pin number i has not been changed since bootup
+ * -> NEEDS TO SEND ACR IN THE NEXT SEND.
+ *
+ * - If a bit at index i of this integer is 1 -> Don't need to send ACR. just directly "i2c_write" the digipot step .
+ *
+ */
+volatile int64_t all_resistor_second_time_flag = 0x0;
+
+volatile uint8_t pinNumber_for_resistor_change = 0;
+
+/**
+ * - If integer at index i is equal to 1, must ENABLE pin number i
+ * - If integer at index i is equal to 2, must DISABLE pin number i
+ */
+volatile uint8_t all_pin_enable_flag[46] = {0};
+volatile uint8_t pinNumber_for_enable_change = 0;
+volatile bool enable_command_flag = false;
+volatile uint8_t current_mux_channel = 0x9;
+
 volatile bool receive_pin_1_flag = false;
 volatile bool receive_pin_3_flag = false;
 volatile bool receive_pin_12_flag = false;
 
-volatile bool enable_command_flag = false;
 volatile bool disable_pin_3_flag = false;
 volatile bool disable_pin_12_flag = false;
 volatile bool enable_pin_3_flag = false;
@@ -164,7 +198,15 @@ volatile uint32_t stepFrequency_inHz = 0;
 volatile uint32_t spanFrequency_inHz = 0;
 volatile uint32_t stopFrequency_inHz = 0;
 volatile uint16_t charge_pump_current = 2500;
-volatile uint8_t i2c_packet_to_send[3];
+
+/**
+ * - i2c_packet_to_send[0] holds the slave address of a digipot
+ * - i2c_packet_to_send[1] holds the register address you want to write to (register add is the address of the register inside of the digipot).
+ * Each digipot has register A & register B.
+ * - i2c_packet_to_send[2] holds the data to send to register A or B. The data is the step of the Potentiometer.
+ * - i2c_packet_to_send[3] holds the MUX_CHANNEL to select
+ */
+volatile uint8_t i2c_packet_to_send[4];
 
 uint64_t lastHop = 0;
 
@@ -197,8 +239,9 @@ void frequencyHopOnce();
 void i2c_setup(void);
 bool i2c_write_register(volatile uint8_t *handler, bool nostop_or_not);
 bool digipots_init(bool on_set_up);
-bool i2c_write_ACR_register(volatile uint8_t *device_address, bool is_volatile);
-bool i2c_write_ACR_register_non_vol_variable(uint8_t *device_address, bool is_volatile);
+bool i2c_write_ACR_register(volatile uint8_t *device_address, uint8_t digipot_mux_channel, bool is_volatile);
+bool i2c_write_ACR_register_non_vol_variable(uint8_t *device_address, uint8_t digipot_mux_channel, bool is_volatile);
+bool i2c_write_I2C_mux(volatile uint8_t *current_mux_channel, uint8_t digipot_mux_channel);
 bool digipots_power_saving_mode(void);
 void ldo_shift_register_init(void);
 // void shift_register_write(uint8_t value);
@@ -335,17 +378,13 @@ void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint
     }
 }
 
-// THESE ARE THE BUFFERS HOLDING THE VALUE OF CHARACTERISTICS
-// BUFFER_SIZE IS CURRENTLY VERY GENEROUS (100)
-// REDUCE THE BUFFER SIZE WHEN ADDING OTHER FEATURES TO THE PICO
-static uint8_t characteristic_FREQUENCY_tx[BUFFER_SIZE];
-static uint8_t characteristic_CONTROL_tx[BUFFER_SIZE];
-static uint8_t characteristic_HOP_tx[BUFFER_SIZE];
-static uint8_t characteristic_REGISTER_tx[BUFFER_SIZE];
-static uint8_t characteristic_LED_tx[BUFFER_SIZE];
-static uint8_t characteristic_SETTING_tx[BUFFER_SIZE];
-static uint8_t characteristic_RESISTOR_tx[BUFFER_SIZE];
-static uint8_t characteristic_ENABLE_tx[BUFFER_SIZE];
+static uint8_t characteristic_FREQUENCY_tx[FREQUENCY_BUFFER_SIZE];
+static uint8_t characteristic_CONTROL_tx[CONTROL_BUFFER_SIZE];
+static uint8_t characteristic_HOP_tx[HOP_BUFFER_SIZE];
+static uint8_t characteristic_REGISTER_tx[REGISTER_BUFFER_SIZE];
+static uint8_t characteristic_LED_tx[LED_BUFFER_SIZE];
+static uint8_t characteristic_SETTING_tx[SETTING_BUFFER_SIZE];
+static uint8_t characteristic_RESISTOR_tx[RESISTOR_BUFFER_SIZE];
 
 bool freqHop_timer_callback(struct repeating_timer *t)
 {
@@ -418,8 +457,7 @@ int main()
                             characteristic_REGISTER_tx,
                             characteristic_LED_tx,
                             characteristic_SETTING_tx,
-                            characteristic_RESISTOR_tx,
-                            characteristic_ENABLE_tx);
+                            characteristic_RESISTOR_tx);
 
     hci_event_callback_registration.callback = &packet_handler;
     hci_add_event_handler(&hci_event_callback_registration);
@@ -436,12 +474,7 @@ int main()
     // Set the digipots in DC Supply module the default values
     // Also toggle the flags to signal that in the next time sending data to those digipot,
     // users needs to send ACR Reg first, setting to volatile.
-    if (digipots_init(true))
-    {
-        pin_1_second_time_send = true;
-        pin_3_second_time_send = true;
-        pin_12_second_time_send = true;
-    };
+    digipots_init(true);
 
     // Store default Frequency = 920 MHz into the Frequency Buffer
     storeFrequency(characteristic_FREQUENCY_tx, defaultFrequency_inHz);
@@ -462,7 +495,7 @@ int main()
         {
 
             printf("\nDefault Frequency Buffer: ");
-            for (int i = 0; i < BUFFER_SIZE; i++)
+            for (int i = 0; i < FREQUENCY_BUFFER_SIZE; i++)
             {
                 printf("%X ", characteristic_FREQUENCY_tx[i]);
             }
@@ -470,7 +503,7 @@ int main()
 
             notify_register_characteristic();
             printf("Default Register buffer: ");
-            for (int i = 0; i < BUFFER_SIZE; i++)
+            for (int i = 0; i < FREQUENCY_BUFFER_SIZE; i++)
             {
                 printf("%X ", characteristic_REGISTER_tx[i]);
             }
@@ -507,7 +540,7 @@ int main()
         {
             frequencyToPLL_inHz = frequencyFromClient_inHz;
             printf("\nFrequency Buffer after receiving frequency 1 %u: ", frequencyToPLL_inHz);
-            for (int i = 0; i < BUFFER_SIZE; i++)
+            for (int i = 0; i < FREQUENCY_BUFFER_SIZE; i++)
             {
                 printf("%X ", characteristic_FREQUENCY_tx[i]);
             }
@@ -652,53 +685,44 @@ int main()
         }
         if (resistor_code_flag)
         {
-            if (receive_pin_1_flag)
+            uint8_t bit = pinNumber_for_resistor_change - 1;
+
+            if ((all_resistor_second_time_flag & (1ULL << bit)) == 0)
             {
-                if (pin_1_second_time_send)
+                // First, we set up the volatile registers of the digipot
+                if (!i2c_write_ACR_register(i2c_packet_to_send, i2c_packet_to_send[3], true))
                 {
-                    i2c_write_ACR_register(i2c_packet_to_send, true);
-                    i2c_write_register(i2c_packet_to_send, false);
-                    pin_1_second_time_send = false;
+                    printf("Failed to set TPL0102 volatile mode\n");
+                }
+                else if (!i2c_write_register(i2c_packet_to_send, false))
+                {
+                    printf("Failed to write TPL0102 wiper\n");
                 }
                 else
                 {
-                    i2c_write_register(i2c_packet_to_send, false);
+                    all_resistor_second_time_flag |= (1ULL << bit);
                 }
-                receive_pin_1_flag = false;
-            }
-            else if (receive_pin_3_flag)
-            {
-                if (pin_3_second_time_send)
-                {
-                    i2c_write_ACR_register(i2c_packet_to_send, true);
-                    i2c_write_register(i2c_packet_to_send, false);
-                    pin_3_second_time_send = false;
-                }
-                else
-                {
-                    i2c_write_register(i2c_packet_to_send, false);
-                }
-                receive_pin_3_flag = false;
-            }
-            else if (receive_pin_12_flag)
-            {
-                if (pin_12_second_time_send)
-                {
-                    i2c_write_ACR_register(i2c_packet_to_send, true);
-                    i2c_write_register(i2c_packet_to_send, false);
-                    pin_12_second_time_send = false;
-                }
-                else
-                {
-                    i2c_write_register(i2c_packet_to_send, false);
-                }
-                receive_pin_12_flag = false;
             }
             else
             {
-                printf("No flag set up for this pin. Currently in main.");
+                i2c_write_register(i2c_packet_to_send, false);
             }
+            characteristic_RESISTOR_tx[pinNumber_for_resistor_change - 1] = i2c_packet_to_send[2];
             resistor_code_flag = false;
+        }
+        if (enable_command_flag)
+        {
+            if (all_pin_enable_flag[pinNumber_for_enable_change - 1] == 2)
+            {
+                shift_register_state &= ~(1 << (pinNumber_for_enable_change - 1));
+            }
+            else if (all_pin_enable_flag[pinNumber_for_enable_change - 1] == 1)
+            {
+                shift_register_state |= (1 << (pinNumber_for_enable_change - 1));
+            }
+            shift_register_write(shift_register_state);
+            enable_command_flag = false;
+            // printf("After: shift_register_state = 0x%02X\n", shift_register_state);
         }
         if (power_saving_mode_flag)
         {
@@ -707,32 +731,6 @@ int main()
                 printf("Failed to switch to power-saving mode");
             }
             power_saving_mode_flag = false;
-        }   
-        if (enable_command_flag)
-        {
-            if (disable_pin_3_flag) {
-                shift_register_state = shift_register_state & ~(1 << 0);
-                disable_pin_3_flag = false;
-                printf("Command: disable pin 3 / Q0\n");
-            }
-            else if (disable_pin_12_flag) {
-                shift_register_state = shift_register_state & ~(1 << 1);
-                disable_pin_12_flag = false;
-                printf("Command: disable pin 12 / Q1\n");
-            }
-            else if (enable_pin_3_flag) {
-                shift_register_state = shift_register_state | 0b00000001;
-                enable_pin_3_flag = false;
-                printf("Command: enable pin 3 / Q0\n");
-            }
-            else if (enable_pin_12_flag) {
-                shift_register_state = shift_register_state | 0b00000010;
-                enable_pin_12_flag = false;
-                printf("Command: enable pin 12 / Q1\n");
-            }
-            printf("After: shift_register_state = 0x%02X\n", shift_register_state);
-            shift_register_write(shift_register_state);
-            enable_command_flag = false;
         }
     }
 }
@@ -1087,16 +1085,22 @@ bool i2c_write_register(volatile uint8_t *handler, bool nostop_or_not)
     // Send one byte to a specified IC register.
     // Returns true if both bytes were acknowledged.
     /*
-    A 3-byte packet that the UI will send to pico looks like:
+    A 4-byte packet that the UI will send to pico looks like:
 
-    [slave addr]   [register addr]     [data]
-     1010 0000        0000 0001        1000 0000
+    [slave addr]   [register addr]     [data]       [mux channel]
+     1010 0000        0000 0001        1000 0000      0000 1000
 
     */
     uint8_t buffer[2];
     uint8_t device_address = handler[0];
-    buffer[0] = handler[1]; // Register address
-    buffer[1] = handler[2]; // Data to store
+    buffer[0] = handler[1];                   // Register address
+    buffer[1] = handler[2];                   // Data to write
+    uint8_t digipot_mux_channel = handler[3]; // the mux channel;
+    if (!i2c_write_I2C_mux(&current_mux_channel, digipot_mux_channel))
+    {
+        printf("Mux does respond after i2c write register");
+        return false;
+    }
 
     int bytes_written = i2c_write_blocking(
         I2C_PORT,
@@ -1109,34 +1113,7 @@ bool i2c_write_register(volatile uint8_t *handler, bool nostop_or_not)
     printf("code written: %u\n", buffer[1]);
     return bytes_written == sizeof(buffer);
 }
-// bool i2c_write_pre_power_mode_registers(uint8_t *handler, size_t handler_size)
-// {
-//     if (handler_size != digipot_power_saving_count)
-//     {
-//         return false;
-//     }
-//     uint8_t buffer[2];
-//     for (int i = 0; i < digipot_power_saving_count; i++)
-//     {
-//         buffer[0] = power_saving_digipot_values[i].register_addr;
-//         buffer[1] = handler[i];
-//         int bytes_written = i2c_write_blocking(
-//             I2C_PORT,
-//             power_saving_digipot_values[i].slave_addr,
-//             buffer,
-//             sizeof(buffer),
-//             false
-//         );
-//         if (bytes_written != sizeof(buffer))
-//         {
-//             printf("failed rollback power-saving slave address: %x\n", power_saving_digipot_values[i].slave_addr,);
-//             printf("failed rollback power-saving reg address: %x\n", buffer[0]);
-//             printf("failed rollback power-saving code: %u\n", buffer[1]);
-//             return false;
-//         }
-//     }
-//     return true;
-// }
+
 bool digipots_power_saving_mode(void)
 {
     uint8_t buffer[2];
@@ -1146,6 +1123,7 @@ bool digipots_power_saving_mode(void)
         slave_addr = power_saving_digipot_values[i].slave_addr;
         buffer[0] = power_saving_digipot_values[i].register_addr;
         buffer[1] = power_saving_digipot_values[i].code;
+        i2c_write_I2C_mux(&current_mux_channel, power_saving_digipot_values[i].mux_channel);
         int bytes_written = i2c_write_blocking(
             I2C_PORT,
             slave_addr,
@@ -1178,8 +1156,14 @@ bool digipots_init(bool on_set_up)
             uint8_t buffer[2];
             buffer[0] = default_digipot_values[i].register_addr;
             buffer[1] = default_digipot_values[i].code;
-            i2c_write_ACR_register_non_vol_variable(&slave_addr, false);
-
+            if (!i2c_write_ACR_register_non_vol_variable(
+                    &slave_addr,
+                    default_digipot_values[i].mux_channel,
+                    false))
+            {
+                printf("Failed to write ACR\n");
+                return false;
+            }
             int bytes_written = i2c_write_blocking(
                 I2C_PORT,
                 slave_addr,
@@ -1191,6 +1175,7 @@ bool digipots_init(bool on_set_up)
             {
                 return false;
             }
+            sleep_ms(25);
         }
         return true;
     }
@@ -1203,6 +1188,7 @@ bool digipots_init(bool on_set_up)
             uint8_t buffer[2];
             buffer[0] = default_digipot_values[i].register_addr;
             buffer[1] = default_digipot_values[i].code;
+            i2c_write_I2C_mux(&current_mux_channel, default_digipot_values[i].mux_channel);
             int bytes_written = i2c_write_blocking(
                 I2C_PORT,
                 default_digipot_values[i].slave_addr,
@@ -1210,7 +1196,7 @@ bool digipots_init(bool on_set_up)
                 sizeof(buffer),
                 false);
 
-            printf("bytes_written - default: %d\n", bytes_written);
+            printf("bytes_written - default setup: %d\n", bytes_written);
             if (bytes_written != sizeof(buffer))
             {
                 printf("failed df slave address: %x\n", default_digipot_values[i].slave_addr);
@@ -1223,32 +1209,7 @@ bool digipots_init(bool on_set_up)
     }
 }
 
-bool i2c_write_ACR_register_non_vol_variable(uint8_t *device_address, bool is_volatile)
-{
-    if (device_address == NULL)
-    {
-        return false;
-    }
-    uint8_t buffer[2];
-    buffer[0] = 0x10;
-    if (is_volatile)
-    {
-        buffer[1] = 0xC0;
-    }
-    else
-    {
-        buffer[1] = 0x60;
-    }
-    int bytes_written = i2c_write_blocking(
-        I2C_PORT,
-        *device_address,
-        buffer,
-        sizeof(buffer),
-        false);
-    return bytes_written == sizeof(buffer);
-}
-
-bool i2c_write_ACR_register(volatile uint8_t *device_address, bool is_volatile)
+bool i2c_write_ACR_register_non_vol_variable(uint8_t *device_address, uint8_t digipot_mux_channel, bool is_volatile)
 {
     if (device_address == NULL)
     {
@@ -1263,6 +1224,39 @@ bool i2c_write_ACR_register(volatile uint8_t *device_address, bool is_volatile)
     else
     {
         buffer[1] = 0x40;
+    }
+    if (!i2c_write_I2C_mux(&current_mux_channel, digipot_mux_channel))
+    {
+        return false;
+    }
+    int bytes_written = i2c_write_blocking(
+        I2C_PORT,
+        *device_address,
+        buffer,
+        sizeof(buffer),
+        false);
+    return bytes_written == sizeof(buffer);
+}
+
+bool i2c_write_ACR_register(volatile uint8_t *device_address, uint8_t digipot_mux_channel, bool is_volatile)
+{
+    if (device_address == NULL)
+    {
+        return false;
+    }
+    uint8_t buffer[2];
+    buffer[0] = 0x10;
+    if (is_volatile)
+    {
+        buffer[1] = 0xC0;
+    }
+    else
+    {
+        buffer[1] = 0x40;
+    }
+    if (!i2c_write_I2C_mux(&current_mux_channel, digipot_mux_channel))
+    {
+        return false;
     }
     int bytes_written = i2c_write_blocking(
         I2C_PORT,
@@ -1303,107 +1297,59 @@ void ldo_shift_register_init(void)
 
     printf("LDO shift register initialized: 0x%02X\n", shift_register_state);
 }
-// void shift_register_write(uint8_t value)
-// {
-//     // Shift MSB first.
-//     // Sending bit 7 first means bit 0 eventually ends up at Q0.
 
-//     for (int bit = 7; bit >= 0; bit--)
-//     {
-//         gpio_put(
-//             SR_DATA_PIN,
-//             (value >> bit) & 0x01);
-
-//         // Rising edge = shift one bit
-//         gpio_put(SR_CLOCK_PIN, 1);
-//         sleep_us(1);
-
-//         gpio_put(SR_CLOCK_PIN, 0);
-//         sleep_us(1);
-//     }
-
-//     // Copy shift register to Q0-Q7
-//     gpio_put(SR_LATCH_PIN, 1);
-//     sleep_us(1);
-
-//     gpio_put(SR_LATCH_PIN, 0);
-// }
-
-// void ldo_set_enable(uint8_t output, bool enable)
-// {
-//     if (output > 7)
-//     {
-//         return;
-//     }
-
-//     uint8_t mask = (1u << output);
-
-//     if (enable)
-//     {
-//         shift_register_state |= mask;
-//     }
-//     else
-//     {
-//         shift_register_state &= ~mask;
-//     }
-
-//     shift_register_write(shift_register_state);
-
-//     printf("74HC595 state: 0x%02X\n", shift_register_state);
-// }
-
-// void handle_enable_command(uint8_t command)
-// {
-//     switch (command)
-//     {
-//     case PIN3_DISABLE:
-//         printf("Disabling Pin 3 / Q0\n");
-//         ldo_set_enable(0, false);
-//         break;
-
-//     case PIN3_ENABLE:
-//         printf("Enabling Pin 3 / Q0\n");
-//         ldo_set_enable(0, true);
-//         break;
-
-//     case PIN12_DISABLE:
-//         printf("Disabling Pin 12 / Q1\n");
-//         ldo_set_enable(1, false);
-//         break;
-
-//     case PIN12_ENABLE:
-//         printf("Enabling Pin 12 / Q1\n");
-//         ldo_set_enable(1, true);
-//         break;
-
-//     default:
-//         printf("Unknown enable command: %u\n", command);
-//         break;
-//     }
-// }
-
-void shift_register_write(uint8_t value) {
+void shift_register_write(uint8_t value)
+{
     gpio_clr_mask(1 << SR_LATCH_PIN);
-    for (int i = 7; i >= 0; i--) {
+    for (int i = 7; i >= 0; i--)
+    {
         gpio_clr_mask(1 << SR_CLOCK_PIN);
-        if (value & (1 << i)) {
+        if (value & (1 << i))
+        {
             gpio_set_mask(1 << SR_DATA_PIN);
-            for (int i = 0; i < 2; i++) {
+            for (int i = 0; i < 2; i++)
+            {
                 asm("nop");
             }
             gpio_set_mask(1 << SR_CLOCK_PIN);
         }
-        else {
+        else
+        {
             gpio_clr_mask(1 << SR_DATA_PIN);
-            for (int i = 0; i < 2; i++) {
+            for (int i = 0; i < 2; i++)
+            {
                 asm("nop");
             }
             gpio_set_mask(1 << SR_CLOCK_PIN);
         }
     }
     gpio_set_mask(1 << SR_LATCH_PIN);
-        for (int i = 0; i < 2; i++) {
-            asm("nop");
-        }
+    for (int i = 0; i < 2; i++)
+    {
+        asm("nop");
+    }
     gpio_clr_mask(1 << SR_LATCH_PIN);
+}
+
+// control bit is the mux channel of the digipot_config struct
+// Mux_channel is the counter that starts with a weird number. got modified to the control bit
+bool i2c_write_I2C_mux(volatile uint8_t *current_mux_channel, uint8_t digipot_mux_channel)
+{
+    if (*current_mux_channel == digipot_mux_channel)
+    {
+        return true;
+    }
+    int bytes_written = i2c_write_blocking(
+        I2C_PORT,
+        I2C_MUX_ADDR,
+        &digipot_mux_channel,
+        1,
+        false);
+    if (bytes_written != 1)
+    {
+        printf("MUX write failed: channel bit = 0x%02X\n", digipot_mux_channel);
+        return false;
+    }
+    *current_mux_channel = digipot_mux_channel;
+    return true;
 }

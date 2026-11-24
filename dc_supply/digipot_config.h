@@ -9,6 +9,7 @@ typedef struct {
     uint8_t slave_addr;
     uint8_t register_addr;
     uint8_t code;
+    uint8_t mux_channel;
 } DigipotConfig;
 
 extern const DigipotConfig power_saving_digipot_values[];

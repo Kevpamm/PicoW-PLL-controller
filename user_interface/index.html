@@ -197,20 +197,21 @@
                     </div>
                 </div>
                 <div class="voltage-settings-div">
-                    <div class="buck-converter-div">
+                    <!--THIS BELOW DIV IS NOT BEING SHOWN-->
+                    <div class="buck-converter-div" hidden>
                         <span>Buck Converter</span>
                         <div class="voltage-display-div">
-                            <span class="voltage-reading" id="pin-1-reading">3.80</span>
+                            <span class="voltage-reading" id="buck-converter-reading">3.80</span>
                             <span class="voltage-unit">V</span>
                         </div>
                         <div class="increase-decrease-div">
-                            <button class="decrease-btn" id="decrease-pin1">
+                            <button class="decrease-btn" id="decrease-buck">
                                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
                                     width="24px" fill="#e3e3e3">
                                     <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z" />
                                 </svg>
                             </button>
-                            <button class="increase-btn" id="increase-pin1">
+                            <button class="increase-btn" id="increase-buck">
                                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
                                     width="24px" fill="#e3e3e3">
                                     <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z" />
@@ -218,8 +219,70 @@
                             </button>
                         </div>
                     </div>
-
+                    <!--END OF THE HIDDEN DIV-->
                     <div class="ldos-div">
+                        <div class="ldo-div" id="pin-1-div">
+                            <span>Pin 1</span>
+                            <div class="voltage-display-div">
+                                <span class="voltage-reading" id="pin-1-reading">2.00 </span>
+                                <span class="voltage-unit">V</span>
+                            </div>
+                            <div class="increase-decrease-div">
+                                <button class="decrease-btn" id="decrease-pin1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+                                        width="24px" fill="#e3e3e3">
+                                        <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z" />
+                                    </svg>
+                                </button>
+                                <label class="switch">
+                                    <input id="toggle-pin-1" type="checkbox" checked="checked">
+                                    <div class="button">
+                                        <div class="light"></div>
+                                        <div class="dots"></div>
+                                        <div class="characters"></div>
+                                        <div class="shine"></div>
+                                        <div class="shadow"></div>
+                                    </div>
+                                </label>
+                                <button class="increase-btn" id="increase-pin1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+                                        width="24px" fill="#e3e3e3">
+                                        <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="ldo-div" id="pin-2-div">
+                            <span>Pin 2</span>
+                            <div class="voltage-display-div">
+                                <span class="voltage-reading" id="pin-2-reading">2.00 </span>
+                                <span class="voltage-unit">V</span>
+                            </div>
+                            <div class="increase-decrease-div">
+                                <button class="decrease-btn" id="decrease-pin2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+                                        width="24px" fill="#e3e3e3">
+                                        <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z" />
+                                    </svg>
+                                </button>
+                                <label class="switch">
+                                    <input id="toggle-pin-2" type="checkbox" checked="checked">
+                                    <div class="button">
+                                        <div class="light"></div>
+                                        <div class="dots"></div>
+                                        <div class="characters"></div>
+                                        <div class="shine"></div>
+                                        <div class="shadow"></div>
+                                    </div>
+                                </label>
+                                <button class="increase-btn" id="increase-pin2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+                                        width="24px" fill="#e3e3e3">
+                                        <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
                         <div class="ldo-div" id="pin-3-div">
                             <span>Pin 3</span>
                             <div class="voltage-display-div">
@@ -233,7 +296,7 @@
                                         <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z" />
                                     </svg>
                                 </button>
-                                <label class="switch">
+                                <label class="switch switch-red">
                                     <input id="toggle-pin-3" type="checkbox" checked="checked">
                                     <div class="button">
                                         <div class="light"></div>
@@ -244,6 +307,254 @@
                                     </div>
                                 </label>
                                 <button class="increase-btn" id="increase-pin3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+                                        width="24px" fill="#e3e3e3">
+                                        <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="ldo-div" id="pin-4-div">
+                            <span>Pin 4</span>
+                            <div class="voltage-display-div">
+                                <span class="voltage-reading" id="pin-4-reading">2.00 </span>
+                                <span class="voltage-unit">V</span>
+                            </div>
+                            <div class="increase-decrease-div">
+                                <button class="decrease-btn" id="decrease-pin4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+                                        width="24px" fill="#e3e3e3">
+                                        <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z" />
+                                    </svg>
+                                </button>
+                                <label class="switch switch-green">
+                                    <input id="toggle-pin-4" type="checkbox" checked="checked">
+                                    <div class="button">
+                                        <div class="light"></div>
+                                        <div class="dots"></div>
+                                        <div class="characters"></div>
+                                        <div class="shine"></div>
+                                        <div class="shadow"></div>
+                                    </div>
+                                </label>
+                                <button class="increase-btn" id="increase-pin4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+                                        width="24px" fill="#e3e3e3">
+                                        <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="ldo-div" id="pin-5-div">
+                            <span>Pin 5</span>
+                            <div class="voltage-display-div">
+                                <span class="voltage-reading" id="pin-5-reading">0.80 </span>
+                                <span class="voltage-unit">V</span>
+                            </div>
+                            <div class="increase-decrease-div">
+                                <button class="decrease-btn" id="decrease-pin5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+                                        width="24px" fill="#e3e3e3">
+                                        <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z" />
+                                    </svg>
+                                </button>
+                                <label class="switch switch-green">
+                                    <input id="toggle-pin-5" type="checkbox" checked="checked">
+                                    <div class="button">
+                                        <div class="light"></div>
+                                        <div class="dots"></div>
+                                        <div class="characters"></div>
+                                        <div class="shine"></div>
+                                        <div class="shadow"></div>
+                                    </div>
+                                </label>
+                                <button class="increase-btn" id="increase-pin5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+                                        width="24px" fill="#e3e3e3">
+                                        <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="ldo-div" id="pin-6-div">
+                            <span>Pin 6</span>
+                            <div class="voltage-display-div">
+                                <span class="voltage-reading" id="pin-6-reading">3.00 </span>
+                                <span class="voltage-unit">V</span>
+                            </div>
+                            <div class="increase-decrease-div">
+                                <button class="decrease-btn" id="decrease-pin6">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+                                        width="24px" fill="#e3e3e3">
+                                        <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z" />
+                                    </svg>
+                                </button>
+                                <label class="switch switch-red">
+                                    <input id="toggle-pin-6" type="checkbox" checked="checked">
+                                    <div class="button">
+                                        <div class="light"></div>
+                                        <div class="dots"></div>
+                                        <div class="characters"></div>
+                                        <div class="shine"></div>
+                                        <div class="shadow"></div>
+                                    </div>
+                                </label>
+                                <button class="increase-btn" id="increase-pin6">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+                                        width="24px" fill="#e3e3e3">
+                                        <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="ldo-div" id="pin-7-div">
+                            <span>Pin 7</span>
+                            <div class="voltage-display-div">
+                                <span class="voltage-reading" id="pin-7-reading">3.00 </span>
+                                <span class="voltage-unit">V</span>
+                            </div>
+                            <div class="increase-decrease-div">
+                                <button class="decrease-btn" id="decrease-pin7">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+                                        width="24px" fill="#e3e3e3">
+                                        <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z" />
+                                    </svg>
+                                </button>
+                                <label class="switch switch-red">
+                                    <input id="toggle-pin-7" type="checkbox" checked="checked">
+                                    <div class="button">
+                                        <div class="light"></div>
+                                        <div class="dots"></div>
+                                        <div class="characters"></div>
+                                        <div class="shine"></div>
+                                        <div class="shadow"></div>
+                                    </div>
+                                </label>
+                                <button class="increase-btn" id="increase-pin7">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+                                        width="24px" fill="#e3e3e3">
+                                        <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="ldo-div" id="pin-8-div">
+                            <span>Pin 8</span>
+                            <div class="voltage-display-div">
+                                <span class="voltage-reading" id="pin-8-reading">1.50 </span>
+                                <span class="voltage-unit">V</span>
+                            </div>
+                            <div class="increase-decrease-div">
+                                <button class="decrease-btn" id="decrease-pin8">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+                                        width="24px" fill="#e3e3e3">
+                                        <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z" />
+                                    </svg>
+                                </button>
+                                <label class="switch switch-green">
+                                    <input id="toggle-pin-8" type="checkbox" checked="checked">
+                                    <div class="button">
+                                        <div class="light"></div>
+                                        <div class="dots"></div>
+                                        <div class="characters"></div>
+                                        <div class="shine"></div>
+                                        <div class="shadow"></div>
+                                    </div>
+                                </label>
+                                <button class="increase-btn" id="increase-pin8">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+                                        width="24px" fill="#e3e3e3">
+                                        <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="ldo-div" id="pin-9-div">
+                            <span>Pin 9</span>
+                            <div class="voltage-display-div">
+                                <span class="voltage-reading" id="pin-9-reading">2.00 </span>
+                                <span class="voltage-unit">V</span>
+                            </div>
+                            <div class="increase-decrease-div">
+                                <button class="decrease-btn" id="decrease-pin9">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+                                        width="24px" fill="#e3e3e3">
+                                        <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z" />
+                                    </svg>
+                                </button>
+                                <label class="switch">
+                                    <input id="toggle-pin-9" type="checkbox" checked="checked">
+                                    <div class="button">
+                                        <div class="light"></div>
+                                        <div class="dots"></div>
+                                        <div class="characters"></div>
+                                        <div class="shine"></div>
+                                        <div class="shadow"></div>
+                                    </div>
+                                </label>
+                                <button class="increase-btn" id="increase-pin9">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+                                        width="24px" fill="#e3e3e3">
+                                        <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="ldo-div" id="pin-10-div">
+                            <span>Pin 10</span>
+                            <div class="voltage-display-div">
+                                <span class="voltage-reading" id="pin-10-reading">2.00 </span>
+                                <span class="voltage-unit">V</span>
+                            </div>
+                            <div class="increase-decrease-div">
+                                <button class="decrease-btn" id="decrease-pin10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+                                        width="24px" fill="#e3e3e3">
+                                        <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z" />
+                                    </svg>
+                                </button>
+                                <label class="switch">
+                                    <input id="toggle-pin-10" type="checkbox" checked="checked">
+                                    <div class="button">
+                                        <div class="light"></div>
+                                        <div class="dots"></div>
+                                        <div class="characters"></div>
+                                        <div class="shine"></div>
+                                        <div class="shadow"></div>
+                                    </div>
+                                </label>
+                                <button class="increase-btn" id="increase-pin10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+                                        width="24px" fill="#e3e3e3">
+                                        <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="ldo-div" id="pin-11-div">
+                            <span>Pin 11</span>
+                            <div class="voltage-display-div">
+                                <span class="voltage-reading" id="pin-11-reading">2.00 </span>
+                                <span class="voltage-unit">V</span>
+                            </div>
+                            <div class="increase-decrease-div">
+                                <button class="decrease-btn" id="decrease-pin11">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+                                        width="24px" fill="#e3e3e3">
+                                        <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z" />
+                                    </svg>
+                                </button>
+                                <label class="switch">
+                                    <input id="toggle-pin-11" type="checkbox" checked="checked">
+                                    <div class="button">
+                                        <div class="light"></div>
+                                        <div class="dots"></div>
+                                        <div class="characters"></div>
+                                        <div class="shine"></div>
+                                        <div class="shadow"></div>
+                                    </div>
+                                </label>
+                                <button class="increase-btn" id="increase-pin11">
                                     <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
                                         width="24px" fill="#e3e3e3">
                                         <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z" />
@@ -264,7 +575,7 @@
                                         <path d="M560-240 320-480l240-240 56 56-184 184 184 184-56 56Z" />
                                     </svg>
                                 </button>
-                                <label class="switch">
+                                <label class="switch switch-red">
                                     <input id="toggle-pin-12" type="checkbox" checked="checked">
                                     <div class="button">
                                         <div class="light"></div>
@@ -311,8 +622,6 @@
     const pllPage = document.getElementById("pll-page");
     const dcSupplyPage = document.getElementById("dc-supply-page");
 
-    const togglePin3 = document.getElementById("toggle-pin-3");
-    const togglePin12 = document.getElementById("toggle-pin-12");
     settingsMenuButton.addEventListener("click", () => {
         settingsDropdown.classList.toggle("hidden");
         settingsMenuButton.classList.toggle("menu-active");
@@ -389,19 +698,6 @@
     const backToDefaultButton = document.getElementById("back-to-default-btn");
     const powerSavingButton = document.getElementById("power-saving-btn");
 
-    const pin1VoltageDisplay = document.getElementById("pin-1-reading");
-    const pin3VoltageDisplay = document.getElementById("pin-3-reading");
-    const pin12VoltageDisplay = document.getElementById("pin-12-reading");
-
-    const decreasePin1Button = document.getElementById("decrease-pin1");
-    const increasePin1Button = document.getElementById("increase-pin1");
-
-    const decreasePin3Button = document.getElementById("decrease-pin3");
-    const increasePin3Button = document.getElementById("increase-pin3");
-
-    const decreasePin12Button = document.getElementById("decrease-pin12");
-    const increasePin12Button = document.getElementById("increase-pin12");
-
     //Define BLE Device Specs
     var deviceName = 'PLL-PICO';
     var bleService = '50e12000-a21d-4471-b2f0-412147c8399e';
@@ -412,7 +708,6 @@
     var ledCharacteristic = '50e12010-a21d-4471-b2f0-412147c8399e';
     var resistorCharacteristic = 'a6bce7c3-2fc7-40c3-88a8-5032d63f353a';
     var settingCharacteristic = 'f8a93cd2-fdda-43d7-b6f3-d5050e7173a2';
-    var enableCharacteristic = 'c82bdf01-4408-4bb1-9b42-461bbaf57d07';
 
     //Global Variables to Handle Bluetooth
     var bleServer;
@@ -424,124 +719,285 @@
 
 
     // DC Supply constants and variables
-    const CODE_MIN = 1;
-    const CODE_MAX = 255;
-    const PIN3_DISABLE = 0;
-    const PIN12_DISABLE = 1;
-    const PIN3_ENABLE = 10;
-    const PIN12_ENABLE = 11;
-
-    const power_saving_buck_converter_code = 55; //0x37 in digipot_config.c
-    const power_saving_buck_converter_voltage = 2.80
-    const default_buck_converter_code = 40;
-    const default_pin3_code = 120;
-    const power_saving_pin3_code = 215; //0xD7
-    const power_saving_pin3_voltage = 1.45;
-    const power_saving_pin12_code = 240; //0xF0
-    const power_saving_pin12_voltage = 1.30;
-    const default_pin12_code = 156;
-
-    let buck_converter_voltage = 3.80;
-    let buck_converter_code = default_buck_converter_code;
-
-    let pin_3_voltage = 2.60;
-    let pin_3_code = default_pin3_code;
-
-    let pin_12_voltage = 2.00;
-    let pin_12_code = default_pin12_code;
-
-    // DC supply functions
-    const clamp = (value, min, max) => {
-        return Math.min(Math.max(value, min), max);
-    }
-
-    const updateVoltageDisplays = () => {
-        pin1VoltageDisplay.innerHTML = buck_converter_voltage.toFixed(2);
-        pin3VoltageDisplay.innerHTML = pin_3_voltage.toFixed(2);
-        pin12VoltageDisplay.innerHTML = pin_12_voltage.toFixed(2);
-    }
-    const calculateNextStep = (pinNumber, direction) => {
-        const codeStep = direction === "increase" ? -1 : +1;
-        let ratio;
-        if (pinNumber === 1) {
-            buck_converter_code = clamp(buck_converter_code + codeStep, CODE_MIN, CODE_MAX);
-            ratio = (1 - (buck_converter_code / 256)) / (buck_converter_code / 256);
-            buck_converter_voltage = 0.6 * (1 + ratio);
-        }
-        else if (pinNumber === 3) {
-            pin_3_code = clamp(pin_3_code + codeStep, CODE_MIN, CODE_MAX);
-            ratio = (1 - (pin_3_code / 256)) / (pin_3_code / 256);
-            pin_3_voltage = 1.22 * (1 + ratio);
-        }
-        else if (pinNumber === 12) {
-            pin_12_code = clamp(pin_12_code + codeStep, CODE_MIN, CODE_MAX);
-            ratio = (1 - (pin_12_code / 256)) / (pin_12_code / 256);
-            pin_12_voltage = 1.22 * (1 + ratio);
-        }
-        updateVoltageDisplays();
-    }
-
+    const DISABLE = 2;
+    const ENABLE = 1;
     const digipotConfig = {
-        // Pin 1 or buck converter = 3.8V default
+        // Pin 1
         1: {
             slaveAddr: 0x50,
-            registerAddr: 0x00
+            registerAddr: 0x00,
+            defaultCode: 205,
+            currentCode: 205,
+            lastCode: 0,
+            minCode: 0,
+            maxCode: 255,
+            powerSavingCode: 154,
+            bufferSavingCode: 0, // this code is to saved the code before powerSavingMode is activated. I don't save this in lastCode since we'll lose the ON/OFF code
+            voltage: 2.00,
+            muxChannel: 0x01,
+            increaseButton: document.getElementById("increase-pin1"),
+            decreaseButton: document.getElementById("decrease-pin1"),
+            toggleButton: document.getElementById("toggle-pin-1"),
+            voltageDisplay: document.getElementById("pin-1-reading")
         },
-
-        // Pin 3 = 2.6V default
-        3: {
+        // Pin 2
+        2: {
             slaveAddr: 0x50,
-            registerAddr: 0x01
+            registerAddr: 0x01,
+            defaultCode: 205,
+            currentCode: 205,
+            lastCode: 0,
+            minCode: 0,
+            maxCode: 255,
+            powerSavingCode: 154,
+            bufferSavingCode: 0,
+            voltage: 2.00,
+            muxChannel: 0x01,
+            increaseButton: document.getElementById("increase-pin2"),
+            decreaseButton: document.getElementById("decrease-pin2"),
+            toggleButton: document.getElementById("toggle-pin-2"),
+            voltageDisplay: document.getElementById("pin-2-reading")
         },
-
-        // Pin 12 = 2.0V default
-        12: {
+        // Pin 3
+        3: {
             slaveAddr: 0x51,
-            registerAddr: 0x00
+            registerAddr: 0x00,
+            defaultCode: 136,
+            currentCode: 136,
+            lastCode: 0x02,
+            minCode: 56,
+            maxCode: 194,
+            powerSavingCode: 0,
+            bufferSavingCode: 0,
+            voltage: 2.60,
+            muxChannel: 1,
+            increaseButton: document.getElementById("increase-pin3"),
+            decreaseButton: document.getElementById("decrease-pin3"),
+            toggleButton: document.getElementById("toggle-pin-3"),
+            voltageDisplay: document.getElementById("pin-3-reading")
+        },
+        // Pin 4
+        4: {
+            slaveAddr: 0x51,
+            registerAddr: 0x01,
+            defaultCode: 205,
+            currentCode: 205,
+            lastCode: 0,
+            minCode: 0,
+            maxCode: 255,
+            powerSavingCode: 154,
+            bufferSavingCode: 0,
+            voltage: 2.00,
+            muxChannel: 0x01,
+            increaseButton: document.getElementById("increase-pin4"),
+            decreaseButton: document.getElementById("decrease-pin4"),
+            toggleButton: document.getElementById("toggle-pin-4"),
+            voltageDisplay: document.getElementById("pin-4-reading")
+        },
+        // Pin 5
+        5: {
+            slaveAddr: 0x52,
+            registerAddr: 0x00,
+            defaultCode: 82,
+            currentCode: 82,
+            lastCode: 0,
+            minCode: 0,
+            maxCode: 255,
+            powerSavingCode: 20,
+            bufferSavingCode: 0,
+            voltage: 0.80,
+            muxChannel: 0x01,
+            increaseButton: document.getElementById("increase-pin5"),
+            decreaseButton: document.getElementById("decrease-pin5"),
+            toggleButton: document.getElementById("toggle-pin-5"),
+            voltageDisplay: document.getElementById("pin-5-reading")
+        },
+        // Pin 6
+        6: {
+            slaveAddr: 0x52,
+            registerAddr: 0x01,
+            defaultCode: 152,
+            currentCode: 152,
+            lastCode: 0,
+            minCode: 56,
+            maxCode: 152,
+            powerSavingCode: 0,
+            bufferSavingCode: 0,
+            voltage: 3.00,
+            muxChannel: 0x2,
+            increaseButton: document.getElementById("increase-pin6"),
+            decreaseButton: document.getElementById("decrease-pin6"),
+            toggleButton: document.getElementById("toggle-pin-6"),
+            voltageDisplay: document.getElementById("pin-6-reading")
+        },
+        // Pin 7
+        7: {
+            slaveAddr: 0x53,
+            registerAddr: 0x00,
+            defaultCode: 152,
+            currentCode: 152,
+            lastCode: 0,
+            minCode: 56,
+            maxCode: 152,
+            powerSavingCode: 0,
+            bufferSavingCode: 0,
+            voltage: 3.00,
+            muxChannel: 0x2,
+            increaseButton: document.getElementById("increase-pin7"),
+            decreaseButton: document.getElementById("decrease-pin7"),
+            toggleButton: document.getElementById("toggle-pin-7"),
+            voltageDisplay: document.getElementById("pin-7-reading")
+        },
+        // Pin 8
+        8: {
+            slaveAddr: 0x53,
+            registerAddr: 0x01,
+            defaultCode: 154,
+            currentCode: 154,
+            lastCode: 0,
+            minCode: 0,
+            maxCode: 255,
+            powerSavingCode: 20,
+            bufferSavingCode: 0,
+            voltage: 1.50,
+            muxChannel: 0x01,
+            increaseButton: document.getElementById("increase-pin8"),
+            decreaseButton: document.getElementById("decrease-pin8"),
+            toggleButton: document.getElementById("toggle-pin-8"),
+            voltageDisplay: document.getElementById("pin-8-reading")
+        },
+        // Pin 9
+        9: {
+            slaveAddr: 0x54,
+            registerAddr: 0x00,
+            defaultCode: 205,
+            currentCode: 205,
+            lastCode: 0,
+            minCode: 0,
+            maxCode: 255,
+            powerSavingCode: 154,
+            bufferSavingCode: 0,
+            voltage: 2.00,
+            muxChannel: 0x01,
+            increaseButton: document.getElementById("increase-pin9"),
+            decreaseButton: document.getElementById("decrease-pin9"),
+            toggleButton: document.getElementById("toggle-pin-9"),
+            voltageDisplay: document.getElementById("pin-9-reading")
+        },
+        // Pin 10
+        10: {
+            slaveAddr: 0x54,
+            registerAddr: 0x01,
+            defaultCode: 171,
+            currentCode: 171,
+            lastCode: 0,
+            minCode: 0,
+            maxCode: 255,
+            powerSavingCode: 128,
+            bufferSavingCode: 0,
+            voltage: 2.00,
+            muxChannel: 0x01,
+            increaseButton: document.getElementById("increase-pin10"),
+            decreaseButton: document.getElementById("decrease-pin10"),
+            toggleButton: document.getElementById("toggle-pin-10"),
+            voltageDisplay: document.getElementById("pin-10-reading")
+        },
+        // Pin 11
+        11: {
+            slaveAddr: 0x55,
+            registerAddr: 0x00,
+            defaultCode: 171,
+            currentCode: 171,
+            lastCode: 0,
+            minCode: 0,
+            maxCode: 255,
+            powerSavingCode: 128,
+            bufferSavingCode: 0,
+            voltage: 2.00,
+            muxChannel: 0x01,
+            increaseButton: document.getElementById("increase-pin11"),
+            decreaseButton: document.getElementById("decrease-pin11"),
+            toggleButton: document.getElementById("toggle-pin-11"),
+            voltageDisplay: document.getElementById("pin-11-reading")
+        },
+        // Pin 12
+        12: {
+            slaveAddr: 0x55,
+            registerAddr: 0x01,
+            defaultCode: 100,
+            currentCode: 100,
+            lastCode: 0,
+            minCode: 56,
+            maxCode: 178,
+            powerSavingCode: 0,
+            bufferSavingCode: 0,
+            voltage: 2.00,
+            muxChannel: 0x02,
+            increaseButton: document.getElementById("increase-pin12"),
+            decreaseButton: document.getElementById("decrease-pin12"),
+            toggleButton: document.getElementById("toggle-pin-12"),
+            voltageDisplay: document.getElementById("pin-12-reading")
         }
     }
-    const sendDigipotCode = (pinNumber, code) => {
+    const pinsWithCurrent = [3, 6, 7, 12, 13, 14, 19, 20, 27, 30, 32, 34, 39, 41, 42];
+    const VC2_and_VC3 = [10, 11, 38];
+    // DC supply functions
+    // Update the voltage display of every pin
+    const updateVoltageDisplays = () => {
+        Object.values(digipotConfig).forEach(config => {
+            config.voltageDisplay.textContent = config.voltage.toFixed(2);
+        });
+    };
+    const calculateNextStep = (pinNumber, direction) => {
+        let codeStep = 0;
+        if (direction === "increase") {
+            codeStep = 1;
+        }
+        else if (direction === "decrease") {
+            codeStep = -1;
+        }
+        // if direction is "neutral", codeStep is 0;
+        if (pinsWithCurrent.includes(pinNumber)) {
+            digipotConfig[pinNumber].currentCode += codeStep;
+            ratio = (digipotConfig[pinNumber].currentCode / 256) / (1 - (digipotConfig[pinNumber].currentCode / 256));
+            digipotConfig[pinNumber].voltage = 1.22 * (1 + ratio);
+            updateVoltageDisplays();
+            return;
+        }
+        else if (VC2_and_VC3.includes(pinNumber)) {
+            digipotConfig[pinNumber].currentCode += codeStep;
+            digipotConfig[pinNumber].voltage = (digipotConfig[pinNumber].currentCode * 3) / 256;
+            updateVoltageDisplays();
+            return;
+        }
+        digipotConfig[pinNumber].currentCode += codeStep;
+        digipotConfig[pinNumber].voltage = (digipotConfig[pinNumber].currentCode * 2.5) / 256;
+        updateVoltageDisplays();
+    };
+
+    const sendDigipotCode = (pinNumber, mode, code) => {
         if (bleServer && bleServer.connected) {
             bleServiceFound.getCharacteristic(resistorCharacteristic)
                 .then(characteristic => {
                     console.log("Found the resistor characteristic: ", characteristic.uuid);
 
-                    const data = packageDigipotData(pinNumber, code);
+        const data = packageDigipotData(pinNumber, mode, code);
 
-                    if (!data) {
-                        return null;
-                    }
-                    console.log("Value in data container:", data[3], data[2], data[1], data[0]);
-                    return characteristic.writeValue(data);
-                })
-                .catch(error => {
-                    console.error("Error writing to the resistor characteristic: ", error);
-                });
+        if (!data) {
+            return null;
+        }
+        console.log("Value in data container:", data[5], data[4], data[3], data[2], data[1], data[0]);
+        return characteristic.writeValue(data);
+        })
+        .catch(error => {
+            console.error("Error writing to the resistor characteristic: ", error);
+        });
         } else {
             console.error("Bluetooth is not connected. Cannot write to characteristic.")
             window.alert("Bluetooth is not connected. Cannot write to characteristic. \n Connect to BLE first!")
         }
     }
-    const sendRollbackRegister = (...pins) => {
-        if (bleServer && bleServer.connected) {
-            bleServiceFound.getCharacteristic(settingCharacteristic)
-                .then(characteristic => {
-                    console.log("Found the setting characteristic: ", characteristic.uuid);
-                    const data = new Uint8Array([pins]);
-                    return characteristic.writeValue(data);
-                })
-                .then(() => {
-                    // latestValueSent.innerHTML = value;
-                    console.log("Value written to setting characteristic:", data);
-                })
-                .catch(error => {
-                    console.error("Error writing to the setting characteristic: ", error);
-                });
-        } else {
-            console.error("Bluetooth is not connected. Cannot write to characteristic.")
-            window.alert("Bluetooth is not connected. Cannot write to characteristic. \n Connect to BLE first!")
-        }
-    }
+
     const writeSettingCharacteristic = (value) => {
         if (bleServer && bleServer.connected) {
             bleServiceFound.getCharacteristic(settingCharacteristic)
@@ -562,17 +1018,159 @@
             window.alert("Bluetooth is not connected. Cannot write to characteristic. \n Connect to BLE first!")
         }
     }
-    const packageDigipotData = (pinNumber, code) => {
+    const packageDigipotData = (pinNumber, mode, code) => {
         const address = digipotConfig[pinNumber];
 
         if (!address) {
             console.error("Invalid pin number", pinNumber);
             return null;
         }
-        return new Uint8Array([pinNumber, address.slaveAddr, address.registerAddr, code]);
+        if (mode === 0) {
+            return new Uint8Array([pinNumber, mode, address.slaveAddr, address.registerAddr, code, address.muxChannel]);
+        }
+        else if (mode === 1) {
+            return new Uint8Array([pinNumber, mode, code, address.muxChannel]);
+        }
     }
-    // End of DC supply functions
+    // DC Supply Button
 
+    // Write to Setting Characteristic - Write 0 to command reset DC supply, 1 to turn ON power saving mode, 2 to turn OFF power-saving mode
+    // The pico receives 0 / 1 / 2 and handles the logic
+    backToDefaultButton.addEventListener("click", () => {
+        writeSettingCharacteristic(0);
+        Object.entries(digipotConfig).forEach(([pin, config]) => {
+            const pinNumber = Number(pin);
+            const hasCurrent = pinsWithCurrent.includes(pinNumber);
+            config.currentCode = config.defaultCode;
+            config.lastCode = 0;
+            config.bufferSavingCode = 0;
+            config.toggleButton.checked = true;
+            calculateNextStep(pinNumber, "neutral");
+            visualizeMovingCodeButton(pinNumber, config, hasCurrent);
+        })
+        updateVoltageDisplays();
+    });
+
+    powerSavingButton.addEventListener("change", () => {
+        if (powerSavingButton.checked) {
+            writeSettingCharacteristic(1);
+            Object.entries(digipotConfig).forEach(([pin, config]) => {
+                if (config.toggleButton.checked) {
+                    config.bufferSavingCode = config.currentCode
+                    config.currentCode = config.powerSavingCode;
+                    sendDigipotCode(Number(pin), 1, config.currentCode); // add this powerSaving and toggle ON/OFF buttons to the firmwar and remove this line
+                    calculateNextStep(Number(pin), "neutral");
+                }
+                else if (!config.toggleButton.checked) {
+                    config.bufferSavingCode = config.lastCode;
+                    config.lastCode = config.powerSavingCode;
+                }
+            });
+            updateVoltageDisplays(); // the UI just send the Setting char and updateVoltage displays, don't send digipot 1 by 1. Leet the firmware receive the poweresaving flag and do its job.
+        }
+        else {
+            writeSettingCharacteristic(2);
+            Object.entries(digipotConfig).forEach(([pin, config]) => {
+                if (config.toggleButton.checked) {
+                    config.currentCode = config.bufferSavingCode;
+                    calculateNextStep(Number(pin), "neutral");
+                }
+                else {
+                    config.lastCode = config.bufferSavingCode;
+                }
+            });
+            updateVoltageDisplays();
+        }
+    });
+    // DC Supply Button setup:
+
+    const disableCurrentMovingCodeButton = (config) => {
+        config.increaseButton.disabled = true;
+        config.increaseButton.classList.add("disabled");
+        config.decreaseButton.disabled = true;
+        config.decreaseButton.classList.add("disabled");
+    }
+    const enableCurrentMovingCodeButton = (config) => {
+        if (config.currentCode < config.maxCode) {
+            config.increaseButton.disabled = false;
+            config.increaseButton.classList.remove("disabled");
+        }
+        if (config.currentCode > config.minCode) {
+            config.decreaseButton.disabled = false;
+            config.decreaseButton.classList.remove("disabled");
+        }
+    }
+    const visualizeMovingCodeButton = (pinNumber, config, hasCurrent) => {
+        if (config.currentCode >= config.maxCode) {
+            config.increaseButton.disabled = true;
+            config.increaseButton.classList.add("disabled");
+            config.decreaseButton.disabled = false;
+            config.decreaseButton.classList.remove("disabled");;
+        }
+        else if (config.currentCode <= config.minCode) {
+            config.decreaseButton.disabled = true;
+            config.decreaseButton.classList.add("disabled");
+            config.increaseButton.disabled = false;
+            config.increaseButton.classList.remove("disabled");
+        }
+        else {
+            if (!hasCurrent || (hasCurrent && config.toggleButton.checked)) {
+                config.increaseButton.disabled = false;
+                config.decreaseButton.disabled = false;
+                config.increaseButton.classList.remove("disabled");
+                config.decreaseButton.classList.remove("disabled");;
+            }
+        }
+    }
+
+    Object.entries(digipotConfig).forEach(([pin, config]) => {
+        const pinNumber = Number(pin);
+        const hasCurrent = pinsWithCurrent.includes(pinNumber);
+        visualizeMovingCodeButton(pinNumber, config, hasCurrent);
+        config.increaseButton.addEventListener("click", () => {
+            if (!config.increaseButton.disabled) {
+                calculateNextStep(pinNumber, "increase");
+                sendDigipotCode(pinNumber, 0, config.currentCode);
+                visualizeMovingCodeButton(pinNumber, config, hasCurrent);
+            }
+        });
+        config.decreaseButton.addEventListener("click", () => {
+            if (!config.decreaseButton.disabled) {
+                calculateNextStep(pinNumber, "decrease");
+                sendDigipotCode(pinNumber, 0, config.currentCode);
+                visualizeMovingCodeButton(pinNumber, config, hasCurrent);
+            }
+        });
+        config.toggleButton.addEventListener("change", () => {
+            if (hasCurrent) {
+                if (config.toggleButton.checked) {
+                    sendDigipotCode(pinNumber, 1, ENABLE);
+                    calculateNextStep(pinNumber, "neutral"); // do this to change config.voltage based on the voltage calculate formula in calculatNextStep();
+                    enableCurrentMovingCodeButton(config);
+                    visualizeMovingCodeButton(pinNumber, config, hasCurrent);
+
+                }
+                else {
+                    sendDigipotCode(pinNumber, 1, DISABLE);
+                    config.voltage = 0.0;
+                    updateVoltageDisplays();
+                    disableCurrentMovingCodeButton(config);
+
+                }
+            }
+            else {
+                sendDigipotCode(pinNumber, 0, config.lastCode);
+                const tempCode = config.lastCode;
+                config.lastCode = config.currentCode;
+                config.currentCode = tempCode;
+                calculateNextStep(pinNumber, "neutral");
+                visualizeMovingCodeButton(pinNumber, config, hasCurrent);
+
+            }
+        });
+    });
+    // End of DC supply functions
+    // const lastSentDigipotCode = new Uint8Array(46);
     const frequency = [[920, 949], [970, 996], [1074, 1106], [1209, 1266], [1270, 1323], [1442, 1514], [1695, 1811], [2142, 2401]];
 
     // Connect Button (search for BLE Devices only if BLE is available)
@@ -646,124 +1244,6 @@
     LedOnButton.addEventListener('click', () => writeOnCharacteristic(1));
     LedOffButton.addEventListener('click', () => writeOnCharacteristic(0));
 
-    // DC Supply characteristics
-
-    // Write to Setting Characteristic - Write 0 to command reset DC supply, 1 to command power saving mode
-    // The pico receives 0 / 1 and handles the logic
-    backToDefaultButton.addEventListener("click", () => {
-        writeSettingCharacteristic(0);
-        buck_converter_voltage = 3.80;
-        buck_converter_code = default_buck_converter_code;
-        pin_3_voltage = 2.60;
-        pin_3_code = default_pin3_code;
-        pin_12_voltage = 2.00;
-        pin_12_code = default_pin12_code;
-        updateVoltageDisplays();
-    });
-    // const power_saving_buck_converter_code = 55; //0x37 in digipot_config.c
-    // const power_saving_buck_converter_voltage = 2.80
-    // const default_buck_converter_code = 40;
-    // const default_pin3_code = 120;
-    // const power_saving_pin3_code = 215;
-    // const power_saving_pin3_voltage = 1.45;
-    // const power_saving_pin12_code = 240;
-    // const power_saving_pin12_voltage = 1.30;
-    // const default_pin12_code = 156;
-    powerSavingButton.addEventListener("change", () => {
-        // let temp_pin_3_code = pin_3_code;
-        // let temp_pin_12_code = pin_12_code;
-        // let temp_buck_converter_code = buck_converter_code;
-
-        // let temp_pin_3_voltage = pin_3_voltage;
-        // let temp_pin_12_voltage = pin_12_voltage;
-        // let temp_buck_converter_voltage = buck_converter_voltage;
-        if (powerSavingButton.checked) {
-            writeSettingCharacteristic(1);
-
-            buck_converter_code = power_saving_buck_converter_code;
-            buck_converter_voltage = power_saving_buck_converter_voltage;
-            pin_3_code = power_saving_pin3_code;
-            pin_3_voltage = power_saving_pin3_voltage;
-            pin_12_code = power_saving_pin12_code;
-            pin_12_voltage = power_saving_pin12_voltage;
-            updateVoltageDisplays();
-        } else {
-            // buck_converter_code = temp_buck_converter_code;
-            // buck_converter_voltage = temp_buck_converter_code;
-            // pin_3_code = temp_pin_3_code;
-            // pin_3_voltage = temp_pin_3_voltage;
-            // pin_12_code = temp_pin_12_code;
-            // pin_12_voltage = temp_pin_12_voltage;
-            // updateVoltageDisplays();
-            // sendRollbackRegister(pin_3_code, pin_12_code, buck_converter_code)
-            buck_converter_voltage = 3.80;
-            buck_converter_code = default_buck_converter_code;
-            pin_3_voltage = 2.60;
-            pin_3_code = default_pin3_code;
-            pin_12_voltage = 2.00;
-            pin_12_code = default_pin12_code;
-            writeSettingCharacteristic(0);
-            updateVoltageDisplays();
-        }
-    });
-
-    // Write to Resistor Characteristic - the written packet contains: Slave Addr, Register Addr, and Digipot Code.
-    increasePin1Button.addEventListener("click", () => {
-        calculateNextStep(1, "increase");
-        sendDigipotCode(1, buck_converter_code);
-    });
-
-    decreasePin1Button.addEventListener("click", () => {
-        calculateNextStep(1, "decrease");
-        sendDigipotCode(1, buck_converter_code);
-
-    });
-
-    increasePin3Button.addEventListener("click", () => {
-        calculateNextStep(3, "increase");
-        sendDigipotCode(3, pin_3_code);
-
-    });
-
-    decreasePin3Button.addEventListener("click", () => {
-        calculateNextStep(3, "decrease");
-        sendDigipotCode(3, pin_3_code);
-
-    });
-
-    increasePin12Button.addEventListener("click", () => {
-        calculateNextStep(12, "increase");
-        sendDigipotCode(12, pin_12_code);
-
-    });
-
-    decreasePin12Button.addEventListener("click", () => {
-        calculateNextStep(12, "decrease");
-        sendDigipotCode(12, pin_12_code);
-
-    });
-
-    togglePin3.addEventListener("change", () => {
-
-        const command = togglePin3.checked
-            ? PIN3_ENABLE
-            : PIN3_DISABLE;
-
-        writeEnableCharacteristic(command)
-            // .catch(() => {
-            //     // Undo UI change if BLE write failed
-            //     togglePin3.checked = !togglePin3.checked;
-            // });
-    });
-
-
-    togglePin12.addEventListener("change", () => {
-        const command = togglePin12.checked ? PIN12_ENABLE : PIN12_DISABLE;
-        
-        writeEnableCharacteristic(command).catch(() => {
-            togglePin12.checked = !togglePin12.checked;
-        });
-    });
 
     // Check if BLE is available in your Browser
     function isWebBluetoothEnabled() {
@@ -1078,7 +1558,7 @@
             window.alert("Bluetooth is not connected. Cannot write to characteristic. \n Connect to BLE first!")
         }
     }
-    const writeEnableCharacteristic = (value) => {
+    const writeEnableCharacteristic = (pinNumber, value) => {
         if (bleServer && bleServer.connected) {
 
             return bleServiceFound.getCharacteristic(enableCharacteristic)
@@ -1088,7 +1568,7 @@
                         characteristic.uuid
                     );
 
-                    const data = new Uint8Array([value]);
+                    const data = new Uint8Array([pinNumber, value]);
 
                     return characteristic.writeValue(data);
                 })

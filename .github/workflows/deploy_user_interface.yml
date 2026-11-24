@@ -2,7 +2,7 @@ name: Deploy User Interface to GitHub Pages
 on:
   push:
     branches:
-      - main
+      - dc-supply-pin1-to-12-no-current
     paths:
       - "user_interface/**"
       - ".github/workflows/deploy_user_interface.yml"
